@@ -29,7 +29,7 @@ Não são divulgados documentos, métricas internas ou dados de usuários.
 
 ### Versão distribuída
 
-Arquivo: [`src/production/I_Love_Cmat_styled.py`](src/production/I_Love_Cmat_styled.py)
+Arquivo: [`I_Love_Cmat_styled.py`](I_Love_Cmat_styled.py)
 
 Esta é a versão convertida em executável e distribuída aos usuários. Ela prioriza recursos já considerados adequados para utilização cotidiana.
 
@@ -50,7 +50,7 @@ Funcionalidades destacadas no código:
 
 ### Versão experimental de uso pessoal
 
-Arquivo: [`src/experimental/I_Love_Cmat_V2.py`](src/experimental/I_Love_Cmat_V2.py)
+Arquivo: [`I_Love_Cmat_V2.py`](I_Love_Cmat_V2.py)
 
 Esta versão amplia a suíte com operações de manipulação mais fina. Ela não deve ser apresentada como versão homologada para produção.
 
@@ -103,7 +103,7 @@ Processamento local em threads
 Arquivos de saída em pasta escolhida pelo usuário
 ```
 
-Consulte também [`docs/architecture.md`](docs/architecture.md).
+Consulte também [`architecture.md`](architecture.md).
 
 ## Tecnologias utilizadas
 
@@ -162,13 +162,13 @@ pip install -r requirements.txt
 Execute a versão distribuída:
 
 ```powershell
-python src/production/I_Love_Cmat_styled.py
+python I_Love_Cmat_styled.py
 ```
 
 Execute a versão experimental:
 
 ```powershell
-python src/experimental/I_Love_Cmat_V2.py
+python I_Love_Cmat_V2.py
 ```
 
 ## Dependências externas e opcionais
