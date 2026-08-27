@@ -1,0 +1,19 @@
+# Dados operacionais e exportações
+*.xlsx
+*.xls
+*.csv
+*.xlsm
+*.ods
+
+# Relatórios e capturas locais
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.webp
+
+# Arquivos temporários
+~$*
+*.tmp
+.DS_Store
+Thumbs.db

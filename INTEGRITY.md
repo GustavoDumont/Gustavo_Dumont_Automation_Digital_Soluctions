@@ -1,0 +1,10 @@
+# Integridade dos HTMLs
+
+Os arquivos abaixo foram copiados sem alteração:
+
+- `dashboard_agendamento_treinamentos_concremat.html`: `32902429131223cb55af87d0a3b017d3384f806aa4fea3a9569479647ed82c72`
+- `dashboard_cronograma_eventos_seguranca_trabalho.html`: `e1846d7bb538ce2f0815ad0c90f625fc2f8b41e44d6d34e0b75b6db36b3c9a97`
+- `dashboard_cronograma_eventos_seguranca_trabalho_metas.html`: `6235388548bb009dc2a3db21afde291fb54a40435958bfbdaec994699e77dcfa`
+- `central_controle_inspecoes_normalizacao_selecao_inspetores_final_corrigido.html`: `621a187007aa55cef6acadf6ecae2824b5196931a996e5f7a6f86d21ab530b60`
+- `dashboard_controle_chamados_concremat.html`: `4bbe5d7857b0d3331e8f887e7c90f79b01b1b3f8a711969339ad0e065d76cc1c`
+- `index.html`: `6f77e05b1221f08446ca9447ac2b82cdabf8f19cdd5eaf12f4bab11668d33a7e`
