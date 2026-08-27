@@ -1,0 +1,18 @@
+# Bases e exportações operacionais
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+*.ods
+
+# Relatórios e arquivos gerados
+*.pdf
+*.zip
+relatorio*
+auditoria*
+
+# Temporários
+~$*
+*.tmp
+.DS_Store
+Thumbs.db

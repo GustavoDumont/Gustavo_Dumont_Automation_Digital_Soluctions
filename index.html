@@ -1,0 +1,2079 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>GTS2 – Gestão de Treinamentos de Segurança | Concremat Engenharia</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+:root{
+  --dk:#0f2744;--bl:#004994;--mb:#0078C0;--lb:#5BA0D1;
+  --or:#F18700;--gn:#27ae60;--rd:#e74c3c;--pu:#8e44ad;--te:#0097A7;--am:#e67e22;
+  --bg:#eef2f7;--card:#fff;--bdr:#dde6ef;--tx:#1e2d3d;--mu:#5a6a7a;
+  --r:8px;--sh:0 2px 12px rgba(15,39,68,.08);--tr:.16s ease;
+  --font:'DM Sans',Arial,sans-serif;--mono:'DM Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:var(--font);font-size:13px;background:var(--bg);color:var(--tx);overflow:hidden}
+#app{display:flex;height:100vh}
+/* SIDEBAR */
+#sidebar{width:238px;min-width:238px;background:var(--dk);display:flex;flex-direction:column;box-shadow:2px 0 16px rgba(0,0,0,.22);z-index:10;overflow-y:auto;overflow-x:hidden}
+.sb-logo{padding:15px 14px 12px;border-bottom:1px solid rgba(255,255,255,.08);background:linear-gradient(160deg,#081a30,var(--dk))}
+.sb-logo-row{display:flex;align-items:center;gap:9px}
+.sb-mark{width:38px;height:38px;flex-shrink:0}
+.sb-brand-name{font-size:13px;font-weight:700;color:#fff}
+.sb-brand-sub{font-size:9px;color:rgba(255,255,255,.3);margin-top:1px}
+.sb-tag{margin-top:10px;font-size:7.5px;font-weight:700;letter-spacing:1.8px;color:var(--or);text-transform:uppercase;border-top:1px solid rgba(255,255,255,.07);padding-top:9px}
+.sb-sect{font-size:8px;font-weight:700;letter-spacing:1.4px;color:rgba(255,255,255,.22);padding:12px 18px 4px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8.5px 18px;cursor:pointer;color:rgba(255,255,255,.52);font-size:12px;border-left:3px solid transparent;transition:all var(--tr);white-space:nowrap;user-select:none}
+.nav-item .ni{font-size:13px;width:17px;text-align:center;flex-shrink:0}
+.nav-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.9)}
+.nav-item.active{background:rgba(0,120,192,.2);color:#fff;border-left-color:var(--or)}
+.ni-badge{margin-left:auto;background:var(--rd);color:#fff;border-radius:10px;padding:1px 6px;font-size:9px;font-weight:700}
+.ni-badge.warn{background:var(--or)}
+.sb-status{margin:6px 12px 2px;padding:7px 10px;border-radius:6px;background:rgba(0,0,0,.2);font-size:10px;color:rgba(255,255,255,.4)}
+.ssr{display:flex;justify-content:space-between;margin-bottom:2px}
+.ss-ok{color:var(--gn)}
+.sb-footer{padding:10px 14px;border-top:1px solid rgba(255,255,255,.07);font-size:9px;color:rgba(255,255,255,.24);text-align:center;line-height:1.6;margin-top:auto}
+/* MAIN */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#topbar{background:var(--bl);height:46px;display:flex;align-items:center;padding:0 22px;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.17);flex-shrink:0}
+#topbar-title{font-size:14px;font-weight:600;color:#fff}
+#topbar-right{display:flex;align-items:center;gap:11px}
+#topbar-date{font-size:11px;color:rgba(255,255,255,.52)}
+.tdot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);transition:all .4s}
+.tdot.on{background:var(--gn);box-shadow:0 0 6px rgba(39,174,96,.55)}
+/* QUICK NAV */
+#qnav{background:var(--dk);height:32px;display:flex;align-items:center;padding:0 6px;gap:2px;overflow-x:auto;flex-shrink:0;border-bottom:2px solid rgba(255,255,255,.06)}
+#qnav::-webkit-scrollbar{height:3px}#qnav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2)}
+.qn{padding:4px 11px;border-radius:4px;cursor:pointer;font-size:10.5px;font-weight:600;color:rgba(255,255,255,.46);transition:all var(--tr);white-space:nowrap;user-select:none}
+.qn:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.07)}
+.qn.active{color:#fff;background:rgba(0,120,192,.35)}
+.qn-sep{width:1px;height:14px;background:rgba(255,255,255,.1);margin:0 2px;flex-shrink:0}
+/* CONTENT */
+#content{flex:1;overflow-y:auto;padding:18px 20px}
+#content::-webkit-scrollbar{width:5px}#content::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
+/* VIEWS */
+.view{display:none;animation:fi .18s ease}
+.view.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.ph{margin-bottom:16px}.ph h1{font-size:18px;font-weight:700;color:var(--dk)}.ph p{font-size:12px;color:var(--mu);margin-top:3px}
+/* CARD */
+.card{background:var(--card);border-radius:var(--r);padding:16px 18px;margin-bottom:14px;box-shadow:var(--sh)}
+.ct{font-size:10.5px;font-weight:700;color:var(--dk);text-transform:uppercase;letter-spacing:.9px;padding-bottom:10px;margin-bottom:12px;border-bottom:2px solid var(--mb);display:flex;align-items:center;gap:7px}
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--card);border-radius:var(--r);padding:13px 15px;box-shadow:var(--sh);border-left:4px solid var(--mb);cursor:pointer;transition:transform var(--tr)}
+.kpi:hover{transform:translateY(-2px)}
+.kpi.red{border-left-color:var(--rd)}.kpi.ora{border-left-color:var(--or)}.kpi.grn{border-left-color:var(--gn)}
+.kpi.dark{border-left-color:var(--dk)}.kpi.pur{border-left-color:var(--pu)}.kpi.teal{border-left-color:var(--te)}
+.kpi-val{font-size:24px;font-weight:700;color:var(--dk);line-height:1}
+.kpi-lbl{font-size:9px;color:var(--mu);margin-top:4px;text-transform:uppercase;letter-spacing:.6px}
+/* TABLE */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:var(--dk);color:#fff;padding:7px 10px;text-align:left;font-size:9.5px;font-weight:700;white-space:nowrap;position:relative}
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{background:#1a3a60}
+th.sort-asc::after{content:' ↑';opacity:.9}
+th.sort-desc::after{content:' ↓';opacity:.9}
+td{padding:7px 10px;border-bottom:1px solid #eef1f5;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr.row-link{cursor:pointer}
+tr.row-link:hover td{background:#e8f0ff!important}
+/* row highlight by status */
+.row-vencido td{background:#fff5f5!important}
+.row-p30 td{background:#f9f0ff!important}
+.row-p45 td{background:#fff3e0!important}
+.row-p60 td{background:#fffde7!important}
+/* BADGE */
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:11px;font-size:10px;font-weight:700;white-space:nowrap}
+.b-ok{background:#e6f9ee;color:#1a6b3a}.b-vencido{background:#ffebee;color:#b71c1c}
+.b-p30{background:#f3e5f5;color:#6a1b9a}.b-p45{background:#fff3e0;color:#bf360c}
+.b-p60{background:#fff8e1;color:#7c5200}
+.b-pend{background:#e3f2fd;color:#0d47a1}.b-sem{background:#f5f5f5;color:#757575}
+.b-ativ{background:#e6f9ee;color:#1a6b3a}.b-lib{background:#e6f9ee;color:#1a6b3a}
+.b-inat{background:#f5f5f5;color:#424242}.b-demob{background:#f5f5f5;color:#424242}
+.b-adm{background:#e3f2fd;color:#0d47a1}
+.b-int{background:#e3f2fd;color:#0d47a1}.b-ext{background:#ede7f6;color:#4527a0}
+/* FILTERS */
+.frow{display:flex;gap:8px;margin-bottom:11px;flex-wrap:wrap;align-items:flex-start}
+.inp{padding:6px 10px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;font-family:var(--font);background:#fff;outline:none;transition:border-color var(--tr)}
+.inp:focus{border-color:var(--mb)}
+.inp-s{flex:1;min-width:155px}.inp-m{min-width:115px}
+/* MSEL (multi-select dropdown) */
+.msel-wrap{position:relative;display:inline-block}
+.msel-btn{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;font-family:var(--font);background:#fff;cursor:pointer;user-select:none;white-space:nowrap;min-width:115px;transition:border-color var(--tr)}
+.msel-btn:hover,.msel-btn.open{border-color:var(--mb)}
+.msel-btn.open{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent}
+.msel-lbl{flex:1;overflow:hidden;text-overflow:ellipsis;max-width:155px}
+.msel-arrow{font-size:8px;color:var(--mu);transition:transform var(--tr);flex-shrink:0}
+.msel-btn.open .msel-arrow{transform:rotate(180deg)}
+.msel-dd{display:none;position:absolute;top:100%;left:0;z-index:500;background:#fff;border:1px solid var(--mb);border-radius:0 6px 6px 6px;box-shadow:0 6px 20px rgba(0,0,0,.12);min-width:200px;max-height:280px;overflow-y:auto}
+.msel-dd.open{display:block}
+.msel-search{padding:6px 10px;border-bottom:1px solid var(--bdr);position:sticky;top:0;background:#fff;z-index:1}
+.msel-search input{width:100%;padding:4px 7px;border:1px solid var(--bdr);border-radius:4px;font-size:11px;font-family:var(--font);outline:none}
+.msel-search input:focus{border-color:var(--mb)}
+.msel-item{display:flex;align-items:center;gap:7px;padding:6px 11px;cursor:pointer;font-size:12px;transition:background var(--tr)}
+.msel-item:hover{background:#f4f8ff}
+.msel-item input[type=checkbox]{width:13px;height:13px;accent-color:var(--bl);cursor:pointer;flex-shrink:0}
+.msel-hdr{font-weight:700;color:var(--bl);background:#f7fbff;font-size:11px;border-bottom:1px solid var(--bdr)}
+.msel-hdr:hover{background:#eaf4ff}
+/* BUTTONS */
+.btn{padding:6px 12px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--font);transition:opacity var(--tr),transform var(--tr);white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.btn:hover{opacity:.88;transform:translateY(-1px)}.btn:active{transform:translateY(0)}
+.btn-p{background:var(--bl);color:#fff}.btn-e{background:var(--mb);color:#fff}
+.btn-o{background:#fff;color:var(--bl);border:1px solid var(--bl)}.btn-sm{padding:4px 8px;font-size:11px}
+.btn-gr{background:var(--gn);color:#fff}.btn-or{background:var(--or);color:#fff}
+/* DROP ZONE */
+.dz{border:2px dashed var(--lb);border-radius:var(--r);padding:24px 18px;text-align:center;cursor:pointer;background:#f7fbff;transition:all var(--tr);margin-bottom:11px}
+.dz:hover,.dz.over{background:#eaf4ff;border-color:var(--bl)}
+.dz-icon{font-size:32px;margin-bottom:6px}.dz-lbl{font-size:13px;font-weight:700;color:var(--bl)}.dz-sub{font-size:11px;color:var(--mu);margin-top:2px}
+/* FILE ITEM */
+.fi{display:flex;align-items:center;gap:9px;padding:7px 11px;background:#f7fbff;border-radius:6px;margin-bottom:6px;border-left:3px solid var(--gn);font-size:12px}
+.fi-n{flex:1;font-weight:700;color:var(--dk)}.fi-i{color:var(--mu);font-size:10.5px}.fi-x{cursor:pointer;color:var(--rd);font-size:14px}
+/* PAGER */
+.pager{display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:11px;flex-wrap:wrap}
+.pi{color:var(--mu);font-size:10.5px;margin-right:auto}
+.pb{padding:3px 7px;border:1px solid var(--bdr);border-radius:4px;background:#fff;cursor:pointer;font-size:11px}
+.pb.active{background:var(--bl);color:#fff;border-color:var(--bl)}.pb:hover:not(.active){background:#f0f4f8}.pb:disabled{opacity:.4;cursor:default}
+/* ALERT TABS */
+.atabs{display:flex;gap:2px;border-bottom:2px solid var(--bdr);margin-bottom:11px;overflow-x:auto}
+.atab{padding:7px 13px;cursor:pointer;font-size:11.5px;font-weight:600;color:var(--mu);border-bottom:3px solid transparent;margin-bottom:-2px;transition:all var(--tr);white-space:nowrap}
+.atab:hover{color:var(--bl)}.atab.active{color:var(--bl);border-bottom-color:var(--or)}
+.ac{display:inline-block;border-radius:10px;padding:1px 5px;font-size:8.5px;font-weight:700;background:#e0e0e0;color:#555;margin-left:3px}
+.t-v .ac{background:var(--rd);color:#fff}.t-p30 .ac{background:var(--pu);color:#fff}
+.t-p45 .ac{background:var(--am);color:#fff}.t-p60 .ac{background:#7c5200;color:#fff}
+.t-sem .ac{background:#757575;color:#fff}.t-pend .ac{background:var(--bl);color:#fff}
+/* AUDIT CARD */
+.acp{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:16px}
+.acp-hdr{background:linear-gradient(135deg,var(--dk),var(--bl));color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:flex-start;position:relative;overflow:hidden}
+.acp-hdr::after{content:'C';position:absolute;right:-4px;top:-14px;font-size:88px;font-weight:900;font-style:italic;color:rgba(255,255,255,.05);pointer-events:none}
+.acp-name{font-size:15px;font-weight:700}.acp-sub{font-size:11px;color:rgba(255,255,255,.6);margin-top:2px}
+.acp-body{padding:16px 20px}
+.acp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-top:10px}
+.acp-t{border:1px solid var(--bdr);border-radius:6px;padding:9px 11px;border-left:3px solid var(--mb)}
+.acp-t.t-vencido{border-left-color:var(--rd)}.acp-t.t-p30{border-left-color:var(--pu)}
+.acp-t.t-p45{border-left-color:var(--am)}.acp-t.t-p60{border-left-color:#7c5200}
+.acp-t.t-pendente{border-left-color:var(--bl);background:#f0f8ff}.acp-t.t-sem{border-left-color:#9e9e9e}
+.acp-t-name{font-size:10px;font-weight:700;color:var(--dk);margin-bottom:3px;line-height:1.3}
+.acp-t-info{font-size:10.5px;color:var(--mu)}
+/* CONFORMIDADE */
+.cbar{height:5px;border-radius:3px;background:var(--bdr);overflow:hidden;margin-top:4px}
+.cbar-f{height:100%;border-radius:3px}
+.ci{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:5px;border:1px solid var(--bdr);background:#fff;font-size:11.5px;margin-bottom:6px}
+.ci-ic{font-size:13px;flex-shrink:0}.ci-n{flex:1;line-height:1.3}.ci-d{font-size:10px;color:var(--mu);white-space:nowrap}
+.c-phdr{background:linear-gradient(135deg,var(--dk),var(--bl));color:#fff;padding:12px 16px;border-radius:var(--r) var(--r) 0 0}
+/* CHARTS */
+.chart-wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.chart-legend{flex:1;min-width:140px}
+.legend-item{display:flex;align-items:center;gap:7px;margin-bottom:6px;font-size:11.5px}
+.legend-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+.dash-filter-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;padding:9px 13px;background:#f7fbff;border-radius:6px;border:1px solid var(--bdr)}
+.dash-alert-filter{display:flex;gap:8px;margin-bottom:9px;flex-wrap:wrap;align-items:center}
+/* GRID LAYOUTS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+/* TRAINING PICKER */
+.tp-wrap{border:1px solid var(--bdr);border-radius:var(--r);max-height:280px;overflow-y:auto;background:#fff}
+.tp-top{padding:7px 10px;border-bottom:1px solid var(--bdr);position:sticky;top:0;background:#fff;z-index:1;display:flex;gap:7px;align-items:center}
+.tp-item{display:flex;align-items:center;gap:8px;padding:6px 11px;font-size:12px;cursor:pointer;transition:background var(--tr);border-bottom:1px solid #f5f7fa}
+.tp-item:hover{background:#f4f8ff}.tp-item:last-child{border-bottom:none}
+.tp-item input{width:13px;height:13px;accent-color:var(--bl);cursor:pointer;flex-shrink:0}
+/* POR COLABORADOR */
+.pc-person{border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+.pc-hdr{background:linear-gradient(135deg,var(--dk),var(--bl));color:#fff;padding:11px 15px;display:flex;justify-content:space-between;align-items:center}
+.pc-body{padding:11px 15px;background:#fff}
+/* CC CARD */
+.cc-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#fff;border:1px solid var(--bdr);border-radius:6px;margin-bottom:7px}
+.cc-name{font-weight:600;flex:1;font-size:12.5px}
+/* BAR CHART */
+.hbar{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:11.5px}
+.hbar-label{min-width:110px;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0;text-align:right;font-size:11px}
+.hbar-track{flex:1;height:20px;background:var(--bdr);border-radius:4px;overflow:hidden;position:relative}
+.hbar-fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px;transition:width .5s ease}
+.hbar-val{position:absolute;left:7px;top:0;bottom:0;display:flex;align-items:center;font-size:10px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.3)}
+/* SCAN BANNER */
+.scan-banner{background:linear-gradient(135deg,var(--dk),var(--bl));border-radius:var(--r);padding:14px 18px;margin-bottom:13px;color:#fff;display:flex;align-items:center;gap:13px}
+.sb-icon{font-size:26px;flex-shrink:0}
+/* MISC */
+.empty{text-align:center;padding:40px 18px;color:var(--mu)}
+.ei{font-size:36px;margin-bottom:8px;opacity:.55}.et{font-size:13px;font-weight:700;color:var(--dk)}.es{font-size:11px;margin-top:4px}
+.text-sm{font-size:11px;color:var(--mu)}.fr{display:flex;align-items:center;gap:8px}.mla{margin-left:auto}
+.s-badge{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--mb);color:#fff;font-size:10px;font-weight:700;flex-shrink:0}
+.code{background:#f0f4f8;padding:1px 5px;border-radius:3px;font-size:11px;font-family:var(--mono)}
+.ptstat{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.ps{padding:7px 11px;border-radius:6px;font-size:11px;font-weight:700;text-align:center}
+.ps-v{background:#ffebee;color:#b71c1c}.ps-a{background:#fff8e1;color:#6d3900}.ps-o{background:#e6f9ee;color:#1a6b3a}.ps-p{background:#e3f2fd;color:#0d47a1}
+@media print{#sidebar,#topbar,#qnav,.frow,.pager,.btn,.aud-search,.msel-wrap,#scan-wrap{display:none!important}
+body,html{overflow:auto;height:auto}#main{display:block}#content{overflow:visible;padding:0}
+.view{display:none!important}#view-auditoria,#view-por-colaborador{display:block!important}
+.acp{box-shadow:none;border:1px solid #ccc;page-break-inside:avoid}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<nav id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-row">
+      <svg class="sb-mark" viewBox="0 0 40 40" fill="none">
+        <defs>
+          <linearGradient id="g1" x1="5" y1="5" x2="35" y2="35" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#5BA0D1"/><stop offset="100%" stop-color="#004994"/></linearGradient>
+          <linearGradient id="g2" x1="35" y1="5" x2="5" y2="35" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0078C0" stop-opacity=".85"/><stop offset="100%" stop-color="#69ACDF" stop-opacity=".65"/></linearGradient>
+        </defs>
+        <path d="M33 9.5C22 3 7 9 7 20s15 17 26 10.5" stroke="url(#g1)" stroke-width="5.5" stroke-linecap="round" fill="none"/>
+        <path d="M29 14c-8-4-16 0-16 6s8 10 16 6" stroke="url(#g2)" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+      </svg>
+      <div><div class="sb-brand-name">Concremat Engenharia</div><div class="sb-brand-sub">Gestão de Treinamentos</div></div>
+    </div>
+    <div class="sb-tag">GTS – Treinamentos de Segurança</div>
+  </div>
+  <div id="sb-status" class="sb-status" style="display:none">
+    <div class="ssr"><span>GTS</span><span class="ss-ok" id="ss-gts">—</span></div>
+    <div class="ssr"><span>Externos</span><span class="ss-ok" id="ss-ext">—</span></div>
+    <div class="ssr"><span>Registros</span><span class="ss-ok" id="ss-reg">—</span></div>
+  </div>
+  <div class="sb-sect">Principal</div>
+  <div class="nav-item active" data-view="import"><span class="ni">📥</span> Importação</div>
+  <div class="nav-item" data-view="dash"><span class="ni">📊</span> Dashboard</div>
+  <div class="sb-sect">Treinamentos</div>
+  <div class="nav-item" data-view="int"><span class="ni">📋</span> Internos (GTS)</div>
+  <div class="nav-item" data-view="ext"><span class="ni">🌐</span> Externos (SGC)</div>
+  <div class="nav-item" data-view="uni"><span class="ni">🔗</span> Visão Unificada</div>
+  <div class="nav-item" data-view="pt"><span class="ni">🎯</span> Pesquisa por Treinamento</div>
+  <div class="nav-item" data-view="pc"><span class="ni">👤</span> Por Colaborador</div>
+  <div class="sb-sect">Gestão</div>
+  <div class="nav-item" data-view="cc"><span class="ni">🏗️</span> Visão por CC</div>
+  <div class="nav-item" data-view="audit"><span class="ni">🔍</span> Auditoria</div>
+  <div class="nav-item" data-view="alrt"><span class="ni">⚠️</span> Alertas <span class="ni-badge warn" id="nb-alrt">0</span></div>
+  <div class="nav-item" data-view="conf"><span class="ni">✅</span> Conformidade</div>
+  <div class="nav-item" data-view="rel"><span class="ni">📑</span> Relatório Auditoria</div>
+  <div style="flex:1"></div>
+  <div class="sb-footer">Desenvolvido por<br><strong style="color:rgba(255,255,255,.5)">Gustavo Dumont</strong><br><span style="color:var(--or)">@gustavofgdumont</span></div>
+</nav>
+
+<div id="main">
+
+  <div id="topbar">
+    <div id="topbar-title">Importação de Dados</div>
+    <div id="topbar-right">
+      <div id="topbar-date"></div>
+      <div class="tdot" id="tdot"></div>
+    </div>
+  </div>
+  <div id="qnav">
+    <div class="qn active" data-view="import">📥 Import</div>
+    <div class="qn" data-view="dash">📊 Dashboard</div>
+    <div class="qn-sep"></div>
+    <div class="qn" data-view="int">📋 GTS</div>
+    <div class="qn" data-view="ext">🌐 Externos</div>
+    <div class="qn" data-view="uni">🔗 Unificado</div>
+    <div class="qn" data-view="pt">🎯 Pesquisa</div>
+    <div class="qn" data-view="pc">👤 Por Colab.</div>
+    <div class="qn-sep"></div>
+    <div class="qn" data-view="cc">🏗️ CC</div>
+    <div class="qn" data-view="audit">🔍 Auditoria</div>
+    <div class="qn" data-view="alrt">⚠️ Alertas</div>
+    <div class="qn" data-view="conf">✅ Conf.</div>
+  </div>
+
+<div id="content">
+
+<!-- ═══ IMPORTAÇÃO ═══════════════════════════════════════ -->
+<div class="view active" id="view-import">
+  <div class="ph"><h1>Importação de Dados</h1><p>Carregue os arquivos. Detecta tabelas automaticamente: <span class="code">Lista_GTS_Pivotado</span>, <span class="code">Lista_GTS</span>, <span class="code">Matriz</span>.</p></div>
+  <div id="scan-wrap">
+    <div class="scan-banner">
+      <div class="sb-icon">📂</div>
+      <div style="flex:1"><strong>Importação Automática por Pasta</strong><div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:3px">Escaneia a pasta e subpastas procurando Matriz_de_Treinamentos e Colaboradores_*.</div></div>
+      <button class="btn btn-or btn-sm" onclick="scanFolder()">📂 Escanear Pasta</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct"><span class="s-badge">1</span> Arquivo GTS Principal</div>
+    <div class="dz" id="dz-gts" onclick="$('fi-gts').click()">
+      <div class="dz-icon">📊</div><div class="dz-lbl">Clique ou arraste o arquivo GTS</div><div class="dz-sub">Matriz_de_Treinamentos.xlsx</div>
+    </div>
+    <input type="file" id="fi-gts" accept=".xlsx,.xls" style="display:none">
+    <div id="fl-gts"></div>
+    <div id="gts-log" style="display:none;margin-top:9px;padding:9px 12px;background:#f0f8ff;border-radius:6px;font-size:11px;color:var(--mu);line-height:1.8"></div>
+  </div>
+  <div class="card">
+    <div class="ct"><span class="s-badge">2</span> Arquivos de Colaboradores (SGC)</div>
+    <div class="dz" id="dz-ext" onclick="$('fi-ext').click()">
+      <div class="dz-icon">📁</div><div class="dz-lbl">Clique ou arraste arquivos de Colaboradores</div><div class="dz-sub">Múltiplos arquivos simultâneos</div>
+    </div>
+    <input type="file" id="fi-ext" accept=".xlsx,.xls" multiple style="display:none">
+    <div id="fl-ext"></div>
+  </div>
+  <div id="import-cta" style="display:none;background:#e8f4fd;border:1px solid var(--lb);border-radius:var(--r);padding:13px 16px;align-items:center;gap:12px">
+    <span style="font-size:20px">✅</span>
+    <div style="flex:1"><strong style="color:var(--dk)">Dados carregados!</strong><div class="text-sm" id="import-sum" style="margin-top:3px"></div></div>
+    <button class="btn btn-p" onclick="navigate('dash')">Ver Dashboard →</button>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD ══════════════════════════════════════════ -->
+<div class="view" id="view-dash">
+  <div class="ph"><h1>Dashboard</h1><p>Visão gerencial</p></div>
+  <div id="dash-empty" class="empty"><div class="ei">📂</div><div class="et">Nenhum dado carregado</div><div class="es">Use <strong>Importação</strong> para carregar os arquivos.</div><button class="btn btn-p" style="margin-top:10px" onclick="navigate('import')">Importar</button></div>
+  <div id="dash-body" style="display:none">
+    <div class="dash-filter-bar">
+      <span style="font-size:10.5px;font-weight:700;color:var(--mu)">Filtros:</span>
+      <div id="mw-df-cc"></div>
+      <div id="mw-df-sit"></div>
+      <div id="mw-dal-fonte"></div>
+      <div id="mw-dal-st"></div>
+      <button class="btn btn-o btn-sm mla" onclick="resetDashF()">↺ Limpar</button>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi dark" onclick="navigate('int')"><div class="kpi-val" id="k-colab">—</div><div class="kpi-lbl">Colaboradores Ativos/Lib.</div></div>
+      <div class="kpi red"  onclick="filterAlrtTab('vencido')"><div class="kpi-val" id="k-venc">—</div><div class="kpi-lbl">Vencidos</div></div>
+      <div class="kpi ora"  onclick="filterAlrtTab('p30')"><div class="kpi-val" id="k-p30">—</div><div class="kpi-lbl">Entre 15 e 30 dias</div></div>
+      <div class="kpi"  style="border-left-color:var(--am)" onclick="filterAlrtTab('p45')"><div class="kpi-val" id="k-p45">—</div><div class="kpi-lbl">Entre 30 e 45 dias</div></div>
+      <div class="kpi pur"  onclick="filterAlrtTab('pend')"><div class="kpi-val" id="k-pend">—</div><div class="kpi-lbl">Pendentes (Matriz)</div></div>
+      <div class="kpi grn"><div class="kpi-val" id="k-conf">—%</div><div class="kpi-lbl">Conformidade Geral</div></div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="ct">🍩 Distribuição de Status</div><div id="dash-donut"></div></div>
+      <div class="card">
+        <div class="ct">⚠️ Alertas Mais Urgentes</div>
+        <div id="dash-alerts"></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="ct">🏆 Treinamentos c/ Mais Problemas</div><div id="dash-top-trei"></div></div>
+      <div class="card"><div class="ct">🏗️ CCs com Mais Vencimentos</div><div id="dash-top-cc"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ INTERNOS ════════════════════════════════════════════ -->
+<div class="view" id="view-int">
+  <div class="ph"><h1>Internos (GTS)</h1><p>Base Lista_GTS_Pivotado. Clique em qualquer linha para abrir na Auditoria.</p></div>
+  <div class="card">
+    <div class="frow">
+      <input class="inp inp-s" id="ii-nome" placeholder="🔍 Nome…" oninput="R.int()">
+      <input class="inp inp-m" id="ii-cargo" placeholder="Cargo…" oninput="R.int()">
+      <input class="inp inp-m" id="ii-trei" placeholder="Treinamento…" oninput="R.int()">
+      <div id="mw-ii-cc"></div>
+      <div id="mw-ii-sit"></div>
+      <div id="mw-ii-st"></div>
+    </div>
+    <div class="tw"><table>
+      <thead><tr>
+        <th class="sortable" data-sort="cc" data-key="int">CC</th>
+        <th class="sortable" data-sort="nome" data-key="int">Nome</th>
+        <th>Cargo</th><th>Situação</th>
+        <th class="sortable" data-sort="treinamento" data-key="int">Treinamento</th>
+        <th class="sortable" data-sort="dataReal" data-key="int">Realização</th>
+        <th class="sortable" data-sort="vencimento" data-key="int">Vencimento</th>
+        <th>Status</th>
+      </tr></thead>
+      <tbody id="tb-int"></tbody>
+    </table></div>
+    <div class="pager" id="pg-int"></div>
+  </div>
+</div>
+
+<!-- ═══ EXTERNOS ════════════════════════════════════════════ -->
+<div class="view" id="view-ext">
+  <div class="ph"><h1>Externos – SGC</h1><p>Clique em qualquer linha para abrir na Auditoria.</p></div>
+  <div class="card">
+    <div class="frow">
+      <input class="inp inp-s" id="ei-nome" placeholder="🔍 Nome…" oninput="R.ext()">
+      <input class="inp inp-m" id="ei-cargo" placeholder="Cargo…" oninput="R.ext()">
+      <input class="inp inp-m" id="ei-trei" placeholder="Treinamento…" oninput="R.ext()">
+      <div id="mw-ei-cc"></div>
+      <div id="mw-ei-sit"></div>
+      <div id="mw-ei-vst"></div>
+    </div>
+    <div class="tw"><table>
+      <thead><tr>
+        <th class="sortable" data-sort="nome" data-key="ext">Nome</th>
+        <th>CPF</th>
+        <th class="sortable" data-sort="cargo" data-key="ext">Cargo</th>
+        <th class="sortable" data-sort="status" data-key="ext">Status</th>
+        <th>Contrato</th>
+        <th class="sortable" data-sort="treinamento" data-key="ext">Treinamento</th>
+        <th class="sortable" data-sort="dataAprov" data-key="ext">Aprovação</th>
+        <th class="sortable" data-sort="dataValidade" data-key="ext">Validade</th>
+        <th>Status Doc</th>
+      </tr></thead>
+      <tbody id="tb-ext"></tbody>
+    </table></div>
+    <div class="pager" id="pg-ext"></div>
+  </div>
+</div>
+
+<!-- ═══ VISÃO UNIFICADA ═════════════════════════════════════ -->
+<div class="view" id="view-uni">
+  <div class="ph"><h1>Visão Unificada</h1><p>Internos + Externos em uma base. Clique para abrir colaborador.</p></div>
+  <div class="card">
+    <div class="frow">
+      <input class="inp inp-s" id="ui-nome" placeholder="🔍 Nome…" oninput="R.uni()">
+      <input class="inp inp-m" id="ui-cargo" placeholder="Cargo…" oninput="R.uni()">
+      <input class="inp inp-m" id="ui-trei" placeholder="Treinamento…" oninput="R.uni()">
+      <div id="mw-ui-cc"></div>
+      <div id="mw-ui-sit"></div>
+      <div id="mw-ui-fonte"></div>
+      <div id="mw-ui-st"></div>
+    </div>
+    <div class="tw"><table>
+      <thead><tr>
+        <th>Fonte</th>
+        <th class="sortable" data-sort="nome" data-key="uni">Nome</th>
+        <th>Cargo</th><th>CC</th><th>Situação</th>
+        <th class="sortable" data-sort="treinamento" data-key="uni">Treinamento</th>
+        <th class="sortable" data-sort="dataReal" data-key="uni">Realização</th>
+        <th class="sortable" data-sort="vencimento" data-key="uni">Vencimento</th>
+        <th>Status</th>
+      </tr></thead>
+      <tbody id="tb-uni"></tbody>
+    </table></div>
+    <div class="pager" id="pg-uni"></div>
+  </div>
+</div>
+
+<!-- ═══ PESQUISA POR TREINAMENTO ════════════════════════════ -->
+<div class="view" id="view-pt">
+  <div class="ph"><h1>Pesquisa por Treinamento</h1><p>Selecione treinamentos e veja quem realizou e quem está pendente.</p></div>
+  <div class="card">
+    <div class="ct">🎯 Selecionar Treinamentos</div>
+    <div class="tp-wrap" id="tp-wrap">
+      <div class="tp-top">
+        <input type="text" id="tp-search" placeholder="🔍 Buscar treinamento…" oninput="renderTP()" style="flex:1;padding:4px 7px;border:1px solid var(--bdr);border-radius:4px;font-size:11px;font-family:var(--font);outline:none">
+        <button class="btn btn-o btn-sm" onclick="tpAll(true)">✔ Todos</button>
+        <button class="btn btn-o btn-sm" onclick="tpAll(false)">✕ Nenhum</button>
+      </div>
+      <div id="tp-list"><div style="padding:20px;text-align:center;color:var(--mu);font-size:12px">Carregue os dados para ver os treinamentos.</div></div>
+    </div>
+    <div style="margin-top:11px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div id="mw-pt-cc"></div>
+      <div id="mw-pt-sit"></div>
+      <div id="mw-pt-st"></div>
+      <span id="tp-count" class="text-sm mla"></span>
+      <button class="btn btn-p btn-sm" onclick="R.pt()">🔎 Pesquisar</button>
+    </div>
+  </div>
+  <div class="card" style="padding:12px 16px">
+    <div style="display:flex;gap:2px;border-bottom:2px solid var(--bdr);margin-bottom:10px">
+      <div class="atab active" id="ptab-trs" onclick="switchPTab('trs')" style="padding:7px 13px;cursor:pointer;font-size:12px;font-weight:600;color:var(--bl);border-bottom:3px solid var(--or);margin-bottom:-2px">📋 Por Treinamento</div>
+      <div class="atab" id="ptab-pess" onclick="switchPTab('pess')" style="padding:7px 13px;cursor:pointer;font-size:12px;font-weight:600;color:var(--mu);border-bottom:3px solid transparent;margin-bottom:-2px">👤 Por Colaborador</div>
+    </div>
+    <div id="pt-res"><div class="empty" style="padding:24px"><div class="ei">🎯</div><div class="et">Selecione treinamentos e clique em Pesquisar</div></div></div>
+  </div>
+</div>
+
+<!-- ═══ POR COLABORADOR ══════════════════════════════════════ -->
+<div class="view" id="view-pc">
+  <div class="ph"><h1>Por Colaborador</h1><p>Todos os treinamentos de um colaborador — internos e externos consolidados.</p></div>
+  <div class="card">
+    <div class="frow">
+      <input class="inp inp-s" id="pc-nome" placeholder="🔍 Nome ou CPF…" oninput="R.pc()">
+      <div id="mw-pc-cc"></div>
+      <div id="mw-pc-sit"></div>
+      <div id="mw-pc-fonte"></div>
+      <button class="btn btn-o btn-sm mla" onclick="doPrint('pc-res','Por Colaborador')">🖨️ Imprimir</button>
+    </div>
+    <div id="pc-res"><div class="empty"><div class="ei">👤</div><div class="et">Digite ao menos 2 letras para buscar</div></div></div>
+  </div>
+</div>
+
+<!-- ═══ VISÃO POR CC ════════════════════════════════════════ -->
+<div class="view" id="view-cc">
+  <div class="ph"><h1>Visão por CC / Contrato</h1><p>Selecione um ou mais CCs para ver os colaboradores e seus treinamentos.</p></div>
+  <div class="card">
+    <div class="frow">
+      <div id="mw-cc-sel" style="min-width:180px"></div>
+      <div id="mw-cc-sit"></div>
+      <input class="inp inp-s" id="cc-nome" placeholder="🔍 Filtrar nome…" oninput="R.cc()">
+    </div>
+    <div id="cc-res"><div class="empty"><div class="ei">🏗️</div><div class="et">Selecione um ou mais CCs</div></div></div>
+    <div class="pager" id="pg-cc"></div>
+  </div>
+</div>
+
+<!-- ═══ AUDITORIA ════════════════════════════════════════════ -->
+<div class="view" id="view-audit">
+  <div class="ph"><h1>Auditoria / Fiscalização</h1><p>Perfil completo de treinamentos por colaborador.</p></div>
+  <div class="card aud-search">
+    <div class="ct">🔍 Buscar Colaborador</div>
+    <div class="frow">
+      <input class="inp inp-s" id="aud-q" placeholder="Nome ou CPF…" oninput="R.audit()">
+      <div id="mw-aud-fonte"></div>
+      <div id="mw-aud-sit"></div>
+      <div id="mw-aud-cc"></div>
+      <button class="btn btn-o btn-sm mla" onclick="doPrint('aud-res','Auditoria')">🖨️ Imprimir</button>
+    </div>
+  </div>
+  <div id="aud-res"><div class="empty"><div class="ei">🔍</div><div class="et">Digite ao menos 2 caracteres ou use os filtros</div></div></div>
+</div>
+
+<!-- ═══ ALERTAS ══════════════════════════════════════════════ -->
+<div class="view" id="view-alrt">
+  <div class="ph"><h1>Alertas de Vencimento</h1><p>Colaboradores Ativos / Liberados / Em Admissão / Bloqueados</p></div>
+  <div class="card">
+    <div class="atabs">
+      <div class="atab t-v active"    data-tab="vencido">🔴 Vencidos <span class="ac" id="ac-vencido">0</span></div>
+      <div class="atab t-p30"         data-tab="p30">🟣 Entre 15 e 30 dias <span class="ac" id="ac-p30">0</span></div>
+      <div class="atab t-p45"         data-tab="p45">🟠 Entre 30 e 45 dias <span class="ac" id="ac-p45">0</span></div>
+      <div class="atab t-p60"         data-tab="p60">🟡 Entre 45 e 60 dias <span class="ac" id="ac-p60">0</span></div>
+      <div class="atab t-sem"         data-tab="sem">⚪ Sem data Vencimento <span class="ac" id="ac-sem">0</span></div>
+      <div class="atab t-pend"        data-tab="pend">🔵 Pendentes <span class="ac" id="ac-pend">0</span></div>
+    </div>
+    <div class="frow">
+      <input class="inp inp-s" id="al-nome" placeholder="🔍 Filtrar nome…" oninput="R.alrt()">
+      <div id="mw-al-cc"></div>
+      <div id="mw-al-fonte"></div>
+      <button class="btn btn-e btn-sm mla" onclick="emailAllVis()">✉️ Enviar Avisos Visíveis</button>
+    </div>
+    <div class="tw"><table>
+      <thead><tr>
+        <th class="sortable" data-sort="fonte" data-key="alr">Fonte</th>
+        <th class="sortable" data-sort="nome" data-key="alr">Nome</th>
+        <th class="sortable" data-sort="cargo" data-key="alr">Cargo</th>
+        <th class="sortable" data-sort="cc" data-key="alr">CC</th>
+        <th class="sortable" data-sort="treinamento" data-key="alr">Treinamento</th>
+        <th class="sortable" data-sort="vencimento" data-key="alr">Vencimento</th>
+        <th class="sortable" data-sort="dias" data-key="alr">Dias</th>
+        <th>E-mail</th>
+      </tr></thead>
+      <tbody id="tb-alrt"></tbody>
+    </table></div>
+    <div class="pager" id="pg-alrt"></div>
+  </div>
+</div>
+
+<!-- ═══ CONFORMIDADE ════════════════════════════════════════ -->
+<div class="view" id="view-conf">
+  <div class="ph"><h1>Conformidade com a Matriz</h1><p>Busca inteligente cruzando trainings internos e externos com a Matriz de Obrigatoriedade.</p></div>
+  <div class="card">
+    <div class="frow">
+      <input class="inp inp-s" id="fc-nome" placeholder="🔍 Nome…" oninput="R.conf()">
+      <input class="inp inp-m" id="fc-cargo" placeholder="Cargo…" oninput="R.conf()">
+      <div id="mw-fc-cc"></div>
+      <div id="mw-fc-st"></div>
+    </div>
+    <div id="conf-res"></div>
+  </div>
+</div>
+
+<!-- RELATÓRIO PARA AUDITORIA -->
+<div class="view" id="view-rel">
+  <div class="ph"><h1>Relatório para Auditoria</h1><p>Gera planilha Excel com todos os colaboradores e treinamentos do(s) CC(s) selecionado(s).</p></div>
+  <div class="card">
+    <div class="ct">⚙️ Configurar Relatório</div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">CCs / Contratos</div>
+      <div id="msl-wrap-rel-cc"></div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">Fonte de dados</div>
+      <div id="msl-wrap-rel-fonte"></div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">Treinamentos a incluir</div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="radio" name="rel-trein-src" value="all" checked> Todos os encontrados nos registros</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="radio" name="rel-trein-src" value="matriz"> Apenas os da Matriz de Obrigatoriedade</label>
+      </div>
+    </div>
+    <div style="background:#f0f8ff;border:1px solid var(--lb);border-radius:var(--r);padding:13px 16px;margin-bottom:14px;font-size:11.5px;color:var(--mu);line-height:1.8">
+      <strong style="color:var(--dk)">📋 Estrutura da planilha gerada:</strong><br>
+      • <strong>Linha 1:</strong> Instrução sobre macro para ocultar colunas<br>
+      • <strong>Linha 2:</strong> Cabeçalho — Nome, CPF, Cargo, Situação, CC + uma coluna por treinamento<br>
+      • <strong>Linha 3+:</strong> Dados com data de realização e vencimento por treinamento<br>
+      • <strong>Cores:</strong> Verde = Em dia, Vermelho = Vencido, Amarelo = A vencer, Cinza = Sem data<br>
+      • <strong>Macros VBA:</strong> Copie o código abaixo no Editor VBA para ocultar/exibir colunas vazias
+    </div>
+    <div style="background:#1e2d3d;border-radius:var(--r);padding:13px 16px;margin-bottom:14px;font-family:monospace;font-size:11px;color:#a8d8f0;line-height:1.7;overflow-x:auto">
+      <div style="color:#7ac142;margin-bottom:4px">' ── Cole este código no Editor VBA do Excel (Alt+F11) ──</div>
+Sub OcultarColunaVazia()<br>
+&nbsp;&nbsp;Dim ws As Worksheet, c As Long, tem As Boolean<br>
+&nbsp;&nbsp;Set ws = ActiveSheet<br>
+&nbsp;&nbsp;Application.ScreenUpdating = False<br>
+&nbsp;&nbsp;For c = 6 To ws.Cells(2, ws.Columns.Count).End(xlToLeft).Column<br>
+&nbsp;&nbsp;&nbsp;&nbsp;tem = False<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Dim i As Long<br>
+&nbsp;&nbsp;&nbsp;&nbsp;For i = 3 To ws.Cells(ws.Rows.Count,1).End(xlUp).Row<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;If ws.Cells(i, c).Value &lt;&gt; "" Then tem = True: Exit For<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Next i<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ws.Columns(c).Hidden = Not tem<br>
+&nbsp;&nbsp;Next c<br>
+&nbsp;&nbsp;Application.ScreenUpdating = True<br>
+End Sub<br><br>
+Sub ReexibirTodas()<br>
+&nbsp;&nbsp;ActiveSheet.Cells.EntireColumn.Hidden = False<br>
+End Sub
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-primary" onclick="gerarRelatorio()">📊 Gerar e Baixar Excel (.xlsx) </button>
+      <button class="btn btn-outline btn-sm" onclick="previewRelatorio()">👁 Pré-visualizar</button>
+      <span id="rel-status" class="tsm" style="margin-left:auto"></span>
+    </div>
+  </div>
+  <div id="rel-preview" style="display:none">
+    <div class="card">
+      <div class="ct">👁 Pré-visualização (máx. 30 colaboradores × 20 treinamentos)</div>
+      <div class="tbl-wrap" id="rel-preview-tbl"></div>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+</div>
+<script>
+
+// ══════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════
+const S={
+  gtsLoaded:false, extFiles:[],
+  pessoas:[], pivotado:[], matrizMap:{},
+  pessoaMap:{}, externos:[], allAlerts:[], pendentes:[],
+  unifiedRows:[], allCCs:[], allCargos:[], allTrainings:[],
+  sorts:{int:{c:null,d:1},ext:{c:null,d:1},uni:{c:null,d:1},alr:{c:null,d:1}},
+  ui:{view:'import',alrtTab:'vencido',ptTab:'trs',pages:{},rpp:50,_cbs:{}}
+};
+const _tpSel = new Set();
+const _ED = {}; let _EI = 0; // email data store
+const _MD = {}; // msel state
+
+// ══════════════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const norm = s => String(s||'').toUpperCase().trim().replace(/\s+/g,' ').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const nCPF = s => String(s||'').replace(/\D/g,'');
+const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const tr = (s,n=48) => { s=String(s||''); return s.length>n?s.slice(0,n)+'…':s };
+
+function pDate(v){
+  if(!v)return null;
+  if(v instanceof Date)return isNaN(v.getTime())?null:v;
+  if(typeof v==='number'&&v>1000){const d=new Date(Math.round((v-25569)*86400000));return isNaN(d.getTime())?null:d}
+  if(typeof v==='string'){
+    let m=v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(m)return new Date(+m[3],+m[2]-1,+m[1]);
+    m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);
+    const d=new Date(v);if(!isNaN(d.getTime()))return d;
+  }
+  return null;
+}
+function fDate(v){const d=pDate(v);return d?d.toLocaleDateString('pt-BR'):'—'}
+function dFrom(v){const d=pDate(v);if(!d)return null;const t=new Date();t.setHours(0,0,0,0);return Math.floor((d-t)/86400000)}
+function aSt(vencimento,dataReal){
+  if(vencimento){
+    const d=dFrom(vencimento);if(d===null)return 'sem';
+    if(d<0)return 'vencido'; if(d<30)return 'p30'; if(d<45)return 'p45'; if(d<60)return 'p60';
+    return 'ok';
+  }
+  if(dataReal)return 'ok'; // has realization = ok even without expiry
+  return 'sem';
+}
+
+function isActive(sit){
+  const s=norm(sit||'');
+  return s==='ATIVO'
+      || s==='LIBERADO'
+      || s==='EM ADMISSAO'
+      || s==='EM ADMISSÃO'
+      || s==='BLOQUEADO';
+}
+
+function isConf(sit){
+  const s=norm(sit||'');
+  return s==='ATIVO'
+      || s==='EM ADMISSAO'
+      || s==='EM ADMISSÃO'
+      || s==='BLOQUEADO';
+}
+
+function bSt(st){
+  const m={ok:'b-ok ✓ Em dia',vencido:'b-vencido ✗ Vencido',p30:'b-p30 ⚠ 15-30d',p45:'b-p45 ⚠ 30-45d',p60:'b-p60 ⚠ 45-60d',
+    pend:'b-pend ✗ Pendente',pendente:'b-pend ✗ Pendente',sem:'b-sem — Sem data',
+    ativo:'b-ativ Ativo',liberado:'b-lib Liberado',inativo:'b-inat Inativo',
+    'em admissão':'b-adm Em Admissão','em admissao':'b-adm Em Admissão',bloqueado:'b-vencido Bloqueado'};
+  const v=m[(st||'').toLowerCase()]||('b-sem '+(st||'—'));
+  const[cls,...r]=v.split(' ');return`<span class="badge ${cls}">${r.join(' ')}</span>`;
+}
+function rCls(st){return{vencido:'row-vencido',p30:'row-p30',p45:'row-p45',p60:'row-p60'}[st]||''}
+function emRow(c,m='Nenhum dado. Carregue os arquivos em Importação.'){return`<tr><td colspan="${c}" style="text-align:center;padding:26px;color:var(--mu)">${m}</td></tr>`}
+function initials(n){const w=String(n||'').trim().split(/\s+/);return((w[0]||'').slice(0,1)+(w[w.length-1]||'').slice(0,1)).toUpperCase()}
+
+// ══════════════════════════════════════════════════════════════════
+// BIGRAM FUZZY
+// ══════════════════════════════════════════════════════════════════
+function bgScore(a,b){
+  if(!a||!b)return 0; if(a===b)return 1;
+  if(a.includes(b)||b.includes(a))return 0.92;
+  const bg=s=>{const m=new Map();for(let i=0;i<s.length-1;i++){const k=s.slice(i,i+2);m.set(k,(m.get(k)||0)+1)}return m};
+  const bg1=bg(a),bg2=bg(b);let hit=0;
+  bg1.forEach((c,k)=>{if(bg2.has(k))hit+=Math.min(c,bg2.get(k))});
+  const tot=(a.length-1)+(b.length-1);return tot>0?(2*hit)/tot:0;
+}
+const FTHRESH=0.38;
+
+// Clean training name for smart conformidade matching
+function cleanTN(s){
+  return norm(s)
+    .replace(/\([^)]*\d[^)]*\)/g,'')     // remove (codes with numbers)
+    .replace(/\b[A-Z]{2,}-\d+[\-\w]*/g,'') // remove PRO-XXXX, PNR-XXXX etc
+    .replace(/\b\d{4,}\b/g,'')            // remove 4+ digit standalone numbers
+    .replace(/\b\d+\s*$/,'')              // remove trailing number
+    .replace(/\s+/g,' ').trim();
+}
+
+function findTraining(trainings, targetName){
+  const tn=norm(targetName);
+  // 1. exact
+  if(trainings[tn])return trainings[tn];
+  // 2. substring prefix
+  const sh=Math.min(16,tn.length);
+  for(const[k,v] of Object.entries(trainings))
+    if(k.includes(tn.slice(0,sh))||tn.includes(k.slice(0,sh)))return v;
+  // 3. clean name match
+  const tnC=cleanTN(targetName);
+  if(tnC.length>=4){
+    for(const[k,v] of Object.entries(trainings)){
+      const kC=cleanTN(k);
+      if(kC===tnC)return v;
+      if(kC.length>=4&&(kC.includes(tnC.slice(0,Math.min(12,tnC.length)))||tnC.includes(kC.slice(0,Math.min(12,kC.length)))))return v;
+      if(bgScore(kC,tnC)>=FTHRESH)return v;
+    }
+  }
+  // 4. bigram on original
+  let best=null,bs=0;
+  for(const[k,v] of Object.entries(trainings)){const sc=bgScore(k,tn);if(sc>bs&&sc>=FTHRESH){best=v;bs=sc}}
+  return best;
+}
+
+function findTrainingInExternos(pExternos, targetName){
+  // Also check external training sources by CPF match
+  for(const p of pExternos){
+    for(const t of p.treinamentos){
+      const tn=norm(t.nome);const target=norm(targetName);
+      const cleanT=cleanTN(t.nome);const cleanTarget=cleanTN(targetName);
+      if(tn===target||cleanT===cleanTarget)return t;
+      if(cleanT.length>=4&&cleanTarget.length>=4&&bgScore(cleanT,cleanTarget)>=FTHRESH)return t;
+    }
+  }
+  return null;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// MSEL COMPONENT
+// ══════════════════════════════════════════════════════════════════
+const MSEL={
+  init(id,opts,label,cb,allByDefault=true){
+    const o=opts.map(x=>typeof x==='string'?{v:x,l:x}:x);
+    _MD[id]={opts:o,sel:allByDefault?new Set(o.map(x=>x.v)):new Set(),label,cb,search:'',open:false};
+    MSEL._render(id);
+  },
+  _render(id){
+    const wEl=$('mw-'+id);if(!wEl)return;
+    const d=_MD[id];if(!d)return;
+    const allSel=d.sel.size>=d.opts.length,noneSel=d.sel.size===0;
+    const lbl=allSel?`${d.label}: Todos`:noneSel?`${d.label}: Nenhum`:
+      d.sel.size===1?`${d.label}: ${[...d.sel][0]}`:`${d.label}: ${d.sel.size} sel.`;
+    const vis=d.opts.filter(o=>!d.search||norm(o.l).includes(norm(d.search)));
+    wEl.innerHTML = `
+      <div class="msel-wrap">
+        <div class="msel-btn${d.open ? ' open' : ''}" onclick='MSEL.toggle(${JSON.stringify(id)})'>
+          <span class="msel-lbl">${esc(lbl)}</span>
+          <span class="msel-arrow">▾</span>
+        </div>
+
+        <div class="msel-dd${d.open ? ' open' : ''}" id="msel-dd-${id}">
+          ${d.opts.length > 5 ? `
+            <div class="msel-search">
+              <input type="text" placeholder="Buscar…" value="${esc(d.search || '')}"
+                oninput='MSEL.srch(${JSON.stringify(id)}, this.value)'
+                onclick="event.stopPropagation()">
+            </div>` : ''}
+
+          <label class="msel-item msel-hdr"
+                onclick='event.preventDefault();MSEL.setAll(${JSON.stringify(id)}, ${!allSel})'>
+            <input type="checkbox" ${allSel ? 'checked' : ''} style="pointer-events:none">
+            Todos
+            <span style="margin-left:auto;font-size:9px;color:var(--mu)">${d.opts.length}</span>
+          </label>
+
+          ${vis.map(o => `
+            <label class="msel-item"
+                  onclick='event.preventDefault();MSEL.tog(${JSON.stringify(id)}, ${JSON.stringify(o.v)}, ${!d.sel.has(o.v)})'>
+              <input type="checkbox" ${d.sel.has(o.v) ? 'checked' : ''} style="pointer-events:none">
+              <span>${esc(o.l)}</span>
+            </label>
+          `).join('')}
+
+          ${!vis.length ? `<div style="padding:9px;font-size:11px;color:var(--mu);text-align:center">Sem resultados</div>` : ''}
+        </div>
+      </div>`;
+  },
+  toggle(id){
+    const d=_MD[id];if(!d)return;
+    const was=d.open;
+    Object.keys(_MD).forEach(k=>{if(_MD[k].open){_MD[k].open=false;MSEL._render(k)}});
+    d.open=!was;MSEL._render(id);
+  },
+  setAll(id,v){
+    const d=_MD[id];if(!d)return;
+    d.sel=v?new Set(d.opts.map(o=>o.v)):new Set();
+    MSEL._render(id);if(d.cb)d.cb();
+  },
+  tog(id,val,checked){
+    const d=_MD[id];if(!d)return;
+    if(checked)d.sel.add(val);else d.sel.delete(val);
+    MSEL._render(id);if(d.cb)d.cb();
+  },
+  srch(id,q){const d=_MD[id];if(!d)return;d.search=q;MSEL._render(id)},
+  vals(id){
+    const d=_MD[id];if(!d)return null;
+    if(!d.opts.length||d.sel.size>=d.opts.length)return null;
+    return[...d.sel];
+  },
+  rebuild(id,newOpts,label,cb){
+    const ex=_MD[id];
+    const opts=newOpts.map(x=>typeof x==='string'?{v:x,l:x}:x);
+    const wasAll=!ex||ex.sel.size>=ex.opts.length;
+    const sel=wasAll?new Set(opts.map(o=>o.v)):new Set([...(ex?.sel||[])].filter(v=>opts.some(o=>o.v===v)));
+    _MD[id]={opts,sel,label:label||(ex?.label||id),cb:cb||(ex?.cb),search:'',open:false};
+    MSEL._render(id);
+  },
+  has(id){return!!_MD[id]}
+};
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.msel-wrap')&&!e.target.closest('[id^="mw-"]')){
+    let any=false;
+    Object.keys(_MD).forEach(k=>{if(_MD[k].open){_MD[k].open=false;any=true}});
+    if(any)Object.keys(_MD).forEach(k=>MSEL._render(k));
+  }
+});
+
+function initMsels(){
+  const sit=[
+  'Ativo',
+  'Liberado',
+  'Em Admissão',
+  'Bloqueado',
+  'Inativo',
+  ];
+  const dashSit=['Ativo','Liberado','Em Admissão'];
+  const st=[{v:'vencido',l:'🔴 Vencido'},{v:'p30',l:'🟣 15-30d'},{v:'p45',l:'🟠 30-45d'},{v:'p60',l:'🟡 45-60d'},{v:'ok',l:'✅ Em dia'},{v:'sem',l:'⚪ Sem data'}];
+  const fonte=[{v:'interno',l:'Interno (GTS)'},{v:'externo',l:'Externo (SGC)'}];
+  MSEL.init('df-sit',dashSit,'Status',updateDash);
+  MSEL.init('dal-fonte',fonte,'Fonte',updateDash);
+  MSEL.init('dal-st',st,'Status',updateDash);
+  MSEL.init('ii-sit',sit,'Situação',R.int);
+  MSEL.init('ii-st',st,'Status',R.int);
+  MSEL.init('ei-sit',sit,'Status',R.ext);
+  MSEL.init('ei-vst',st.concat([{v:'sem',l:'⚪ Indeterminado'}]).filter((x,i,a)=>a.findIndex(y=>y.v===x.v)===i),'Validade',R.ext);
+  MSEL.init('ui-sit',sit,'Situação',R.uni);
+  MSEL.init('ui-fonte',fonte,'Fonte',R.uni);
+  MSEL.init('ui-st',st,'Status',R.uni);
+  MSEL.init('pt-sit',sit,'Situação',null);
+  MSEL.init('pt-st',st,'Status',null);
+  MSEL.init('pc-sit',sit,'Situação',R.pc);
+  MSEL.init('pc-fonte',fonte,'Fonte',R.pc);
+  MSEL.init('aud-fonte',fonte,'Fonte',R.audit,true); // all by default
+  MSEL.init('aud-sit',sit,'Situação',R.audit,true);
+  MSEL.init('al-fonte',fonte,'Fonte',R.alrt);
+  MSEL.init('fc-st',[{v:'nok',l:'Com pendências'},{v:'ok',l:'Conformes'}],'Mostrar',R.conf,false);
+  MSEL.init('cc-sit',sit,'Situação',R.cc);
+  // placeholder CC msels
+  ['df-cc','ii-cc','ei-cc','ui-cc','pt-cc','pc-cc','aud-cc','al-cc','fc-cc','cc-sel','rel-cc'].forEach(id=>MSEL.init(id,[],'CC',null));
+
+  MSEL.init('rel-fonte',[{v:'interno',l:'Interno (GTS)'},{v:'externo',l:'Externo (SGC)'}],'Fonte',null);}
+function rebuildCC(){
+  const ccs=S.allCCs.map(v=>({v,l:v}));
+  const map={'df-cc':updateDash,'ii-cc':R.int,'ei-cc':R.ext,'ui-cc':R.uni,'pt-cc':null,'pc-cc':R.pc,'aud-cc':R.audit,'al-cc':R.alrt,'fc-cc':R.conf,'cc-sel':R.cc,'rel-cc':null};
+  Object.entries(map).forEach(([id,cb])=>MSEL.rebuild(id,ccs,'CC',cb));
+}
+
+// ══════════════════════════════════════════════════════════════════
+// COLUMN SORT
+// ══════════════════════════════════════════════════════════════════
+function initSortHeaders(){
+  document.querySelectorAll('th.sortable[data-sort]').forEach(th=>{
+    th.addEventListener('click',()=>{
+      const col=th.dataset.sort,key=th.dataset.key;
+      const s=S.sorts[key];
+      if(s.c===col)s.d*=-1;else{s.c=col;s.d=1}
+      // update visual
+      document.querySelectorAll(`th.sortable[data-key="${key}"]`).forEach(h=>{
+        h.classList.remove('sort-asc','sort-desc');
+        if(h.dataset.sort===col)h.classList.add(s.d===1?'sort-asc':'sort-desc');
+      });
+      const cbMap={int:R.int,ext:R.ext,uni:R.uni,alr:R.alrt};
+      if(cbMap[key])cbMap[key]();
+    });
+  });
+}
+function applySort(rows,key,fields){
+  const s=S.sorts[key];if(!s.c)return rows;
+  const f=fields[s.c];if(!f)return rows;
+  return[...rows].sort((a,b)=>{
+    let va=f(a),vb=f(b);
+    if(va instanceof Date&&vb instanceof Date)return(va-vb)*s.d;
+    if(va==null)return 1;if(vb==null)return -1;
+    if(typeof va==='string')return va.localeCompare(vb,'pt-BR')*s.d;
+    return(va-vb)*s.d;
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SHEET DETECTION
+// ══════════════════════════════════════════════════════════════════
+function sheetByTable(wb,name){
+  const n=norm(name);
+  for(const sn of wb.SheetNames){
+    const ws=wb.Sheets[sn];const tables=ws['!tables'];
+    if(Array.isArray(tables)){for(const t of tables){if(t&&t.name&&(norm(t.name)===n||norm(t.name).includes(n.slice(0,12))))return sn}}
+  }
+  return null;
+}
+function sheetByHeaders(wb,...cols){
+  const req=cols.map(norm);
+  for(const sn of wb.SheetNames){
+    const ws=wb.Sheets[sn];if(!ws['!ref'])continue;
+    const rng=XLSX.utils.decode_range(ws['!ref']);const hdrs=[];
+    for(let c=rng.s.c;c<=rng.e.c;c++){const cl=ws[XLSX.utils.encode_cell({r:rng.s.r,c})];hdrs.push(cl?norm(String(cl.v||'')):'');}
+    if(req.every(r=>hdrs.some(h=>h.includes(r.slice(0,12)))))return sn;
+  }
+  return null;
+}
+function wsArr(ws){if(!ws||!ws['!ref'])return[];return XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:false,dateNF:'DD/MM/YYYY'})}
+
+// ══════════════════════════════════════════════════════════════════
+// LOAD GTS
+// ══════════════════════════════════════════════════════════════════
+
+// ═══ VALIDITY MAP (Matriz_T / Informações de Treinamentos) ═══
+const VALIDITY_MAP={"Assédio Moral e Sexual": 1, "Capacitação de Saúde Emocional (ONL-1242194)": 2, "Desenergização conforme NR10 (1302250)": 2, "Direitos Humanos (1287166)": 2, "Diretrizes Corporativas para Implementação das Regras de Ouro (1242138)": 2, "Diretrizes de SSMA para o Processo de Mobilização e Desmobilização em Ferrosos": 0, "Diretrizes para Análise de Risco da Tarefa - ART (PNR-000068)": 0, "Diretrizes para Análise de Risco da Tarefa-ART-Ferrosos (PRO-034346)": 0, "Diretrizes para Gestão de Requisitos Legais e Outros Requisitos de SSMA (PGS-004109)": 0, "Ética para contratados (1277070)": 2, "Gerenciamento de Eventos de Saúde, Segurança, Meio Ambiente, Comunidade e Segurança de Processos (PNR-000070)": 3, "Gerenciamento de Saúde, Segurança e Meio Ambiente para Contratadas da Vale (PNR-000067)": 0, "Gestão de Não Conformidades (PGS-005486)": 0, "Gestão de Riscos Críticos (CRM): treinamento para Profissionais de Segurança (ONL-1316132)": 2, "Gestão de Saúde, Segurança e Meio Ambiente para Contratadas (PGS-005871)": 3, "Gestão do Processo de Supressão de Vegetação (PNR-000104)": 3, "Gestão RAC Ferrosos (PGS-005879)": 0, "Guia para Segregação, Armazenamento e Destinação de Resíduos Sólidos (PRO-022144)": 2, "INTEGRAÇÃO CONCREMAT CCCC": 2, "Manual para Certificação ISO 14001 (PNR-000099)": 3, "NR 06 - EPI (CH 04:00)": 4, "NR 10 BÁSICO - FORMAÇÃO": 2, "NR 18 - SEGURANÇA NA CONSTRUÇÃO (CH 04:00)": 2, "NR 22 - SEGURANÇA MINERAÇÃO": 3, "PAE": 2, "PCMSO": 3, "PGR": 2, "PNR-000015 - Sistemas de Proteção e Combate a Incêndio (SPCI) – Geral (1237132)": 2, "PNR-000105 - Sistemas de Proteção e Combate a Incêndio (SPCI) – Subestações (1250105)": 2, "PNR-000182 IMPACTOS AMBIENTAIS LAIA": 2, "POL-0019-G POLÍTICA DE SUSTENT. (CH 00:50)": 3, "PREVENÇÃO DE ACIDENTES (CH 01:00)": 2, "Prevenção de Riscos à Saúde – Ergonomia (ONL-1264076)": 2, "Programa de Compliance CMAT": 1, "Programa de Gerenciamento de Resíduos Sólidos Corredor Sul (PRO-043814)": 0, "Programa de Inspeções SSMA (PRO-024157)": 0, "Programa de Prevenção de Fadiga (PNR-000257) (1242096)": 2, "Recuperação de Áreas Degradadas - RAD (PGS-003145)": 0, "SEP - FORMAÇÃO": 2, "TBSSMA": 3, "Testagem Para Álcool e Drogas Psicoativas": 2};
+const _VM={};
+(function(){for(const[k,v] of Object.entries(VALIDITY_MAP))_VM[norm(k)]=v})();
+
+function normTrain(s){
+  return norm(s).replace(/\([^)]*\d[^)]*\)/g,'').replace(/\bCH\s+\d+:\d+\b/g,'')
+    .replace(/\b(PRO|PNR|PGS|ONL|POL|PTS)-[\d-]+\b/gi,'').replace(/\b\d{5,}\b/g,'')
+    .replace(/[-–]/g,' ').replace(/\s+/g,' ').trim();
+}
+
+function calcVencimento(treinamento,dataReal,rawVenc){
+  const nt=norm(treinamento),ntC=normTrain(treinamento);
+  let years=_VM[nt];
+  if(years===undefined&&ntC.length>=5){for(const[k,v] of Object.entries(_VM)){if(normTrain(k)===ntC){years=v;break}}}
+  if(years===undefined){let best=undefined,bs=0;for(const[k,v] of Object.entries(_VM)){const sc=Math.max(bgScore(k,nt),ntC.length>=5?bgScore(normTrain(k),ntC):0);if(sc>bs&&sc>=0.6){best=v;bs=sc}}; years=best;}
+  if(years===undefined)return rawVenc??null;
+  if(years===0)return null;
+  if(!dataReal)return rawVenc??null;
+  return new Date(dataReal.getTime()+years*365.25*24*3600*1000);
+}
+
+function updateValidityMapFromSheet(ws){
+  const rows=wsArr(ws);if(rows.length<2)return 0;
+  const h=rows[0];
+  const iV=h.findIndex(x=>{const n2=norm(String(x||''));return n2.includes('VENCIMENT')&&!n2.endsWith('X')});
+  if(iV<0)return 0;
+  let count=0;
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i];if(!r||!r[0])continue;
+    const tn=String(r[0]).trim();if(!tn)continue;
+    const vs=String(r[iV]||'').toLowerCase();
+    let y=undefined;
+    if(vs.includes('sem validade'))y=0;
+    else if(/01|1\s*ano/.test(vs))y=1;
+    else if(/02|2\s*ano/.test(vs))y=2;
+    else if(/03|3\s*ano/.test(vs))y=3;
+    else if(/04|4\s*ano/.test(vs))y=4;
+    if(y!==undefined){_VM[norm(tn)]=y;count++;}
+  }
+  return count;
+}
+
+function loadGTS(file){
+  readXL(file,(err,wb)=>{
+    if(err){alert('Erro ao ler GTS:\n'+err.message);return}
+    const log=[];
+    let shP=sheetByTable(wb,'Lista_GTS_Pivotado')||sheetByTable(wb,'GTS_Pivotado');
+    if(!shP)shP=sheetByHeaders(wb,'NOME_COLABORADOR','Treinamento','Vencimento');
+    if(!shP)shP=sheetByHeaders(wb,'NOME_COLABORADOR','Treinamento');
+    log.push(shP?`✅ Lista_GTS_Pivotado → "${shP}"`:'❌ Pivotado não encontrado');
+    let shL=sheetByTable(wb,'Lista_GTS');
+    if(!shL)shL=sheetByHeaders(wb,'NOME_COLABORADOR','Email Corporativo','Fone Corporativo');
+    log.push(shL?`✅ Lista_GTS → "${shL}"`:'ℹ️ Lista_GTS não encontrada (opcional)');
+    let shM=sheetByTable(wb,'Matriz');
+    if(!shM)shM=sheetByHeaders(wb,'Cargo');
+    log.push(shM?`✅ Matriz → "${shM}"`:'❌ Matriz não encontrada');
+    if(!shP){showLog(log,'gts-log');alert('Lista_GTS_Pivotado não encontrada.');return}
+
+    // Parse Lista_GTS (persons)
+    S.pessoas=[];
+    if(shL){
+      const rows=wsArr(wb.Sheets[shL]);
+      if(rows.length>=2){
+        const h=rows[0].map(x=>String(x||'').trim());
+        const gi=k=>h.findIndex(x=>norm(x).includes(norm(k)));
+        const iN=gi('NOME'),iCC=gi('CC'),iCg=gi('Cargo'),iSit=gi('Situa'),iCPF=gi('CPF'),iEm=gi('Email Corp'),iFn=gi('Fone');
+        for(let i=1;i<rows.length;i++){
+          const r=rows[i];if(!r)continue;
+          const nome=String(r[iN>=0?iN:1]||'').trim();if(!nome)continue;
+          S.pessoas.push({cc:String(r[iCC>=0?iCC:0]||'').trim(),nome,cargo:String(r[iCg>=0?iCg:2]||'').trim(),situacao:String(r[iSit>=0?iSit:3]||'').trim(),cpf:nCPF(r[iCPF>=0?iCPF:4]),email:String(r[iEm>=0?iEm:5]||'').trim(),fone:String(r[iFn>=0?iFn:6]||'').trim()});
+        }
+      }
+    }
+    log.push(`   ${S.pessoas.length} pessoas em Lista_GTS`);
+
+    // Parse Pivotado
+    const pivR=wsArr(wb.Sheets[shP]);
+    if(pivR.length<2){alert('Pivotado vazio.');return}
+    const ph=pivR[0].map(h=>String(h||'').trim());
+    const pi=k=>ph.findIndex(h=>norm(h).includes(norm(k)));
+    const iCC=Math.max(pi('CC'),0),iN=pi('NOME')>=0?pi('NOME'):1;
+    const iCg=pi('CARGO CTPS')>=0?pi('CARGO CTPS'):pi('CARGO')>=0?pi('CARGO'):2;
+    const iSit=pi('SITUA'),iCPF=pi('CPF');
+    const iEm=pi('EMAIL')>=0?pi('EMAIL'):pi('mail')>=0?pi('mail'):8;
+    const iFn=pi('FONE'),iTr=pi('TREINAMENTO')>=0?pi('TREINAMENTO'):4;
+    const iReal=pi('DATA DE REALIZA')>=0?pi('DATA DE REALIZA'):pi('Realiza')>=0?pi('Realiza'):5;
+    // Vencimento: prefer exact "Vencimento" col, not Vencimentox
+    const iV=ph.findIndex(h=>{const n2=norm(h);return n2==='VENCIMENTO'});
+    const iV2=iV>=0?iV:(pi('VENCIMENTO')>=0?pi('VENCIMENTO'):6);
+
+    S.pivotado=[];
+    for(let i=1;i<pivR.length;i++){
+      const r=pivR[i];if(!r)continue;
+      const nome=String(r[iN]||'').trim();if(!nome||nome==='__PowerAppsId__')continue;
+      const dataReal=pDate(iReal>=0?r[iReal]:null);
+      const rawVenc=pDate(iV2>=0?r[iV2]:null);
+      const treinNome=String(r[iTr]||'').trim();
+      let venc=calcVencimento(treinNome,dataReal,rawVenc);
+      S.pivotado.push({cc:String(r[iCC]||'').trim(),nome,cargo:String(r[iCg>=0?iCg:2]||'').trim(),situacao:String(r[iSit>=0?iSit:3]||'').trim(),cpf:nCPF(r[iCPF>=0?iCPF:7]),email:String(r[iEm]||'').trim(),fone:String(r[iFn>=0?iFn:9]||'').trim(),treinamento:String(r[iTr]||'').trim(),dataReal,vencimento:venc});
+    }
+    log.push(`   ${S.pivotado.length} registros lidos`);
+
+    // Parse Matriz
+    S.matrizMap={};
+    if(shM){
+      const mR=wsArr(wb.Sheets[shM]);
+      if(mR.length>=2){
+        const mh=mR[0];
+        for(let i=1;i<mR.length;i++){
+          const r=mR[i];if(!r||!r[0])continue;
+          const cargo=String(r[0]).trim();if(!cargo||cargo==='__PowerAppsId__')continue;
+          const req=[];
+          for(let c=1;c<mh.length;c++){const tn=String(mh[c]||'').trim();if(!tn||tn==='__PowerAppsId__')continue;if(String(r[c]||'').toUpperCase().trim()==='X')req.push(tn)}
+          if(req.length)S.matrizMap[cargo]=req;
+        }
+      }
+    }
+    log.push(`   ${Object.keys(S.matrizMap).length} cargos na Matriz`);
+    // Load Matriz_T validity overrides
+    let shVT=sheetByTable(wb,'Matriz_T');
+    if(!shVT)shVT=sheetByName(wb,'INFORMACOES DE TREINAMENTOS','Informações de Treinamentos');
+    if(shVT){const upd=updateValidityMapFromSheet(wb.Sheets[shVT]);log.push(`✅ Matriz_T → "${shVT}" (${upd} validades)`);
+    }else{log.push('ℹ️ Matriz_T não encontrada – usando mapa embutido ('+Object.keys(_VM).length+' validades)');}
+    S.gtsLoaded=true;
+    showLog(log,'gts-log');allUpdate();
+    renderFL('fl-gts',[{name:file.name,info:`${S.pivotado.length} registros · ${S.pessoas.length} pessoas · ${Object.keys(S.matrizMap).length} cargos`}],false);
+  });
+}
+function showLog(lines,id){const el=$(id);if(!el)return;el.style.display='';el.innerHTML='<strong>Detecção automática:</strong><br>'+lines.map(l=>`<span style="color:${l.startsWith('✅')?'#1a6b3a':l.startsWith('❌')?'#b71c1c':'#5a6a7a'}">${esc(l)}</span>`).join('<br>')}
+
+// ══════════════════════════════════════════════════════════════════
+// LOAD EXTERNOS
+// ══════════════════════════════════════════════════════════════════
+function loadExt(file){
+  readXL(file,(err,wb)=>{
+    if(err){alert(`Erro ao ler ${file.name}:\n${err.message}`);return}
+    const shC=wb.SheetNames.find(n=>norm(n).includes('COLABOR'))||wb.SheetNames[0];
+    const shD=wb.SheetNames.find(n=>norm(n).includes('DOCUMENT')||norm(n).includes('DOCS'));
+    const cR=wsArr(wb.Sheets[shC]),dR=shD?wsArr(wb.Sheets[shD]):[];
+    if(cR.length<2){alert(`Nenhum dado em ${file.name}`);return}
+    const ch=cR[0].map(h=>String(h||'').trim());
+    const ci=k=>ch.findIndex(h=>norm(h).includes(norm(k)));
+    const cN=ci('Nome'),cD=ci('Documento de identifica'),cSt=ci('Status do colaborador');
+    const cCg=ci('Cargo')>=0?ci('Cargo'):ch.length-4,cCt=ci('Contrato')>=0?ci('Contrato'):-1;
+    const docsMap={};
+    if(dR.length>=2){
+      const dh=dR[0].map(h=>String(h||'').trim());
+      const di=k=>dh.findIndex(h=>norm(h).includes(norm(k)));
+      const dD=di('Documento de identifica'),dN=di('Nome do documento'),dA=di('Data de aprova'),dV=di('Data de validade'),dS=di('Status');
+      for(let i=1;i<dR.length;i++){
+        const r=dR[i];if(!r||dD<0||!r[dD])continue;
+        const cpf=nCPF(r[dD]);if(!cpf)continue;
+        if(!docsMap[cpf])docsMap[cpf]=[];
+        const raw=dV>=0?r[dV]:null,vs=String(raw||'').trim();
+        docsMap[cpf].push({
+          nome:String(r[dN>=0?dN:1]||'').trim(),
+          dataAprov:pDate(r[dA>=0?dA:2]),
+          dataValidade:(vs==='-'||!vs)?null:pDate(raw),
+          statusDoc:String(r[dS>=0?dS:5]||'').trim()
+        });
+      }
+    }
+
+    const pessoas=[];
+    for(let i=1;i<cR.length;i++){
+      const r=cR[i];if(!r)continue;
+      const nome=String(r[cN>=0?cN:0]||'').trim();if(!nome||nome==='Nome')continue;
+      const cpf=nCPF(cD>=0?r[cD]:r[1]);
+      const status = String(cSt >= 0 ? r[cSt] : r[2] || '').trim();
+
+      if (norm(status) === 'DESMOBILIZADO') continue;
+
+      pessoas.push({
+        nome,
+        cpf,
+        cargo:String(r[cCg>=0?cCg:ch.length-4]||'').trim(),
+        status,
+        contrato:cCt>=0?String(r[cCt]||'').trim():'',
+        source:file.name,
+        treinamentos:docsMap[cpf]||[]
+      });
+    }
+
+    const idx=S.extFiles.findIndex(f=>f.name===file.name);
+    if(idx>=0)S.extFiles[idx]={name:file.name,rows:pessoas};else S.extFiles.push({name:file.name,rows:pessoas});
+    mergeExt();allUpdate();renderExtFL();
+  });
+}
+function mergeExt(){
+  S.externos=[];
+  for(const f of S.extFiles)for(const p of f.rows){
+    const ex=p.cpf?S.externos.find(e=>e.cpf&&e.cpf===p.cpf):S.externos.find(e=>norm(e.nome)===norm(p.nome));
+    if(ex){for(const t of p.treinamentos)if(!ex.treinamentos.find(et=>norm(et.nome)===norm(t.nome)))ex.treinamentos.push(t);if(!ex.contrato&&p.contrato)ex.contrato=p.contrato}
+    else S.externos.push({...p,treinamentos:[...p.treinamentos]});
+  }
+}
+function readXL(file,cb){
+  const r=new FileReader();
+  r.onerror=()=>cb(new Error('Falha ao ler.'));
+  r.onload=e=>{try{cb(null,XLSX.read(e.target.result,{type:'array',cellDates:true,raw:false,dateNF:'DD/MM/YYYY'}))}catch(err){cb(err)}};
+  r.readAsArrayBuffer(file);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// AUTO-SCAN FOLDER
+// ══════════════════════════════════════════════════════════════════
+async function scanFolder(){
+  if(!('showDirectoryPicker' in window)){alert('Seu navegador não suporta este recurso.\nUse Google Chrome ou Edge.');return}
+  let dir;try{dir=await window.showDirectoryPicker({mode:'read'})}catch(e){if(e.name!=='AbortError')alert('Erro: '+e.message);return}
+  const found=[];await scanDir(dir,found);
+  if(!found.length){alert('Nenhum arquivo Excel encontrado.');return}
+  const gtsF=found.filter(f=>/(matriz|gts)/i.test(f.name));
+  const extF=found.filter(f=>/(colaboradores|sgc)/i.test(f.name));
+  for(const f of gtsF){const file=await f.getFile();loadGTS(file)}
+  for(const f of extF){const file=await f.getFile();loadExt(file)}
+  if(!gtsF.length&&!extF.length)alert('Nenhum arquivo GTS ou Colaboradores encontrado.');
+}
+async function scanDir(h,found,d=0){
+  if(d>4)return;
+  for await(const[n,hh] of h){
+    if(hh.kind==='file'&&/\.xlsx?$/i.test(n))found.push(hh);
+    else if(hh.kind==='directory')try{await scanDir(hh,found,d+1)}catch(e){}
+  }
+}
+document.addEventListener('DOMContentLoaded',()=>{if(!('showDirectoryPicker' in window)){const b=$('scan-wrap');if(b)b.style.display='none'}});
+
+// ══════════════════════════════════════════════════════════════════
+// DATA PROCESSING
+// ══════════════════════════════════════════════════════════════════
+function buildPMap(){
+  S.pessoaMap={};
+
+  // 1. Mapeia as informações completas indexadas pelo nome normalizado do colaborador
+  const infoPorNome = {};
+  const coletarDadosOrigem = (lista) => {
+    for (const x of lista) {
+      if (!x.nome) continue;
+      const kNome = norm(x.nome);
+      if (!infoPorNome[kNome]) {
+        infoPorNome[kNome] = { cc: '', cargo: '', situacao: '', cpf: '', email: '', fone: '' };
+      }
+      const info = infoPorNome[kNome];
+      if (x.cc && !info.cc) info.cc = String(x.cc).trim();
+      if (x.cargo && !info.cargo) info.cargo = String(x.cargo).trim();
+      if (x.situacao && !info.situacao) info.situacao = String(x.situacao).trim();
+      if (x.cpf && !info.cpf) info.cpf = nCPF(x.cpf);
+      if (x.email && !info.email) info.email = String(x.email).trim();
+      if (x.fone && !info.fone) info.fone = String(x.fone).trim();
+    }
+  };
+
+  coletarDadosOrigem(S.pessoas);
+  coletarDadosOrigem(S.pivotado);
+
+  // 2. Preenche retroativamente as lacunas em branco para que os filtros das tabelas funcionem
+  const preencherLacunas = (lista) => {
+    for (const x of lista) {
+      if (!x.nome) continue;
+      const info = infoPorNome[norm(x.nome)];
+      if (info) {
+        if (!x.cc) x.cc = info.cc;
+        if (!x.cargo) x.cargo = info.cargo;
+        if (!x.situacao) x.situacao = info.situacao;
+        if (!x.cpf) x.cpf = info.cpf;
+        if (!x.email) x.email = info.email;
+        if (!x.fone) x.fone = info.fone;
+      }
+    }
+  };
+
+  preencherLacunas(S.pessoas);
+  preencherLacunas(S.pivotado);
+
+  // 3. Monta o mapa unificado (S.pessoaMap) vinculando os registros pelo CPF corporativo comum
+  for(const p of S.pessoas){
+    const info = infoPorNome[norm(p.nome)];
+    const k = (info && info.cpf) ? info.cpf : (p.cpf || norm(p.nome));
+    if(!k)continue;
+    S.pessoaMap[k]={nome:p.nome,cargo:p.cargo,situacao:p.situacao,cpf:p.cpf,email:p.email,fone:p.fone,cc:p.cc,trainings:{}};
+  }
+  for(const r of S.pivotado){
+    const info = infoPorNome[norm(r.nome)];
+    const k = (info && info.cpf) ? info.cpf : (r.cpf || norm(r.nome));
+    if(!k)continue;
+    if(!S.pessoaMap[k])S.pessoaMap[k]={nome:r.nome,cargo:r.cargo,situacao:r.situacao,cpf:r.cpf,email:r.email,fone:r.fone,cc:r.cc,trainings:{}};
+    else{const p=S.pessoaMap[k];if(!p.email&&r.email)p.email=r.email;if(!p.cc&&r.cc)p.cc=r.cc;if(!p.cargo&&r.cargo)p.cargo=r.cargo;}
+    const p=S.pessoaMap[k],tk=norm(r.treinamento);
+    if(tk&&r.treinamento){const ex=p.trainings[tk];if(!ex||(r.vencimento&&(!ex.vencimento||r.vencimento>ex.vencimento))||(r.dataReal&&!ex.dataReal))p.trainings[tk]={nome:r.treinamento,dataReal:r.dataReal,vencimento:r.vencimento}}
+  }
+}
+function getReqTrainings(cargo){
+  const nc=norm(cargo);
+  for(const[mc,t] of Object.entries(S.matrizMap)){
+    const nmc=norm(mc);
+    if(nmc===nc||bgScore(nmc,nc)>=0.5)return t;
+  }
+  return null;
+}
+function computePendentes(){
+  S.pendentes=[];
+  for(const p of Object.values(S.pessoaMap)){
+    if(!isActive(p.situacao))continue;
+    const req=getReqTrainings(p.cargo);if(!req)continue;
+    for(const tn of req){
+      if(!findTraining(p.trainings,tn))
+        S.pendentes.push({fonte:'interno',nome:p.nome,cargo:p.cargo,cpf:p.cpf,email:p.email,cc:p.cc,treinamento:tn,dataReal:null,vencimento:null,dias:null,status:'pend'});
+    }
+  }
+}
+function buildUnified(){
+  S.unifiedRows=[];
+  for(const r of S.pivotado)S.unifiedRows.push({fonte:'interno',nome:r.nome,cargo:r.cargo,cpf:r.cpf,cc:r.cc,situacao:r.situacao,treinamento:r.treinamento,dataReal:r.dataReal,vencimento:r.vencimento});
+  for(const p of S.externos)for(const t of p.treinamentos)S.unifiedRows.push({fonte:'externo',nome:p.nome,cargo:p.cargo,cpf:p.cpf,cc:p.contrato||'',situacao:p.status,treinamento:t.nome,dataReal:t.dataAprov,vencimento:t.dataValidade});
+}
+function buildMeta(){
+  S.allCCs=[...new Set([...S.pivotado.map(r=>r.cc),...S.externos.map(p=>p.contrato)].filter(Boolean))].sort();
+  S.allTrainings=[...new Set([...S.pivotado.map(r=>r.treinamento),...Object.values(S.matrizMap).flat()].filter(Boolean))].sort();
+}
+function computeAlerts(){
+  S.allAlerts=[];
+  for(const r of S.pivotado){
+    if(!isActive(r.situacao))continue;
+    const st=aSt(r.vencimento,r.dataReal);if(st==='ok'||st==='sem')continue;
+    S.allAlerts.push({fonte:'interno',nome:r.nome,cargo:r.cargo,cpf:r.cpf,cc:r.cc,email:r.email,treinamento:r.treinamento,dataReal:r.dataReal,vencimento:r.vencimento,dias:dFrom(r.vencimento),status:st});
+  }
+  for(const p of S.externos){
+    if(!isActive(p.status))continue;
+    let em='';const gp=p.cpf?(S.pessoaMap[p.cpf]||Object.values(S.pessoaMap).find(x=>x.cpf===p.cpf)):null;if(gp)em=gp.email||'';
+    for(const t of p.treinamentos){const st=aSt(t.dataValidade,t.dataAprov);if(st==='ok'||st==='sem')continue;S.allAlerts.push({fonte:'externo',nome:p.nome,cargo:p.cargo,cpf:p.cpf,cc:p.contrato||'',email:em,treinamento:t.nome,dataReal:t.dataAprov,vencimento:t.dataValidade,dias:dFrom(t.dataValidade),status:st})}
+  }
+  S.allAlerts.sort((a,b)=>(a.dias||0)-(b.dias||0));
+  const nb=$('nb-alrt');if(nb){const tot=S.allAlerts.length+S.pendentes.length;nb.textContent=tot>99?'99+':tot;nb.className='ni-badge'+(S.allAlerts.some(a=>a.status==='vencido')?'':' warn')}
+  ['vencido','p30','p45','p60','sem'].forEach(k=>{const el=$('ac-'+k);if(el)el.textContent=S.allAlerts.filter(a=>a.status===k).length});
+  const pe=$('ac-pend');if(pe)pe.textContent=S.pendentes.length;
+}
+function allUpdate(){
+  buildPMap();computePendentes();buildUnified();buildMeta();computeAlerts();
+  rebuildCC();renderTP();updateDash();updateSBStat();
+  const has=S.gtsLoaded||S.externos.length>0;
+  const cta=$('import-cta');if(cta)cta.style.display=has?'flex':'none';
+  const sum=$('import-sum');if(sum)sum.textContent=`${S.pivotado.length} registros GTS · ${Object.keys(S.matrizMap).length} cargos · ${S.externos.length} externos`;
+}
+function updateSBStat(){
+  const box=$('sb-status');if(!box)return;
+  if(S.gtsLoaded||S.externos.length>0){
+    box.style.display='';
+    const sg=$('ss-gts');if(sg)sg.textContent=S.gtsLoaded?'✓':'—';
+    const se=$('ss-ext');if(se)se.textContent=S.externos.length;
+    const sr=$('ss-reg');if(sr)sr.textContent=S.pivotado.length;
+  }
+  const dot=$('tdot');if(dot){dot.className='tdot'+(S.gtsLoaded?' on':'');dot.title=S.gtsLoaded?'GTS carregado':'GTS não carregado'}
+}
+
+// ══════════════════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════════════════
+const DONUT_COLORS={ok:'#27ae60',vencido:'#e74c3c',p30:'#8e44ad',p45:'#d35400',p60:'#0097A7',sem:'#95a5a6',pend:'#2980b9'};
+const ST_LABEL={ok:'Em dia',vencido:'Vencidos',p30:'15-30 dias',p45:'30-45 dias',p60:'45-60 dias',sem:'Sem data',pend:'Pendentes'};
+
+function resetDashF(){
+  ['df-cc','df-sit','dal-fonte','dal-st'].forEach(id=>{
+    const d=_MD[id];if(!d)return;
+    d.sel=new Set(d.opts.map(o=>o.v));
+    MSEL._render(id);
+  });
+  updateDash();
+}
+function updateDash(){
+  const has=S.gtsLoaded||S.externos.length>0;
+  const de=$('dash-empty');if(de)de.style.display=has?'none':'';
+  const db=$('dash-body');if(db)db.style.display=has?'':'none';
+  if(!has)return;
+
+  // Convert selected values to Sets once. Membership tests remain O(1).
+  const toSet=id=>{const v=MSEL.vals(id);return v?new Set(v):null};
+  const ccF=toSet('df-cc'),sitF=toSet('df-sit'),fonteF=toSet('dal-fonte'),stF=toSet('dal-st');
+  const allow=(set,value)=>!set||set.has(value);
+
+  // Build a lightweight person/status index once per refresh.
+  const personStatus=new Map();
+  for(const p of Object.values(S.pessoaMap)){
+    const st=p.situacao||'';
+    if(p.cpf)personStatus.set('C:'+p.cpf,st);
+    personStatus.set('N:'+norm(p.nome),st);
+  }
+  for(const p of S.externos){
+    const st=p.status||'';
+    if(p.cpf)personStatus.set('C:'+p.cpf,st);
+    personStatus.set('N:'+norm(p.nome),st);
+  }
+  const statusOf=r=>personStatus.get(r.cpf?'C:'+r.cpf:'N:'+norm(r.nome))||r.situacao||'';
+  const baseOk=r=>allow(ccF,r.cc)&&allow(sitF,statusOf(r))&&allow(fonteF,r.fonte);
+  const statusOk=st=>allow(stF,st);
+
+  // One pass through unified records for KPIs and donut.
+  const activePeople=new Set();
+  const stCounts={ok:0,vencido:0,p30:0,p45:0,p60:0,sem:0};
+  for(const r of S.unifiedRows){
+    if(!isActive(r.situacao)||!baseOk(r))continue;
+    const st=aSt(r.vencimento,r.dataReal);
+    if(!statusOk(st))continue;
+    activePeople.add(r.cpf||norm(r.nome)+'|'+r.fonte);
+    if(stCounts[st]!==undefined)stCounts[st]++;
+  }
+
+  // One pass through alerts. The previous slowdown came from repeated full-list searches here.
+  const alertRows=[];
+  let venc=0,p30=0,p45=0;
+  const tmap=Object.create(null),ccV=Object.create(null);
+  for(const a of S.allAlerts){
+    if(!baseOk(a)||!statusOk(a.status))continue;
+    alertRows.push(a);
+    if(a.status==='vencido'){venc++;const cc=a.cc||'—';ccV[cc]=(ccV[cc]||0)+1}
+    else if(a.status==='p30')p30++;
+    else if(a.status==='p45')p45++;
+    tmap[a.treinamento]=(tmap[a.treinamento]||0)+1;
+  }
+
+  // Pendencies are internal and use the same global filters.
+  let totalP=0;
+  if(allow(fonteF,'interno')&&statusOk('pend')){
+    for(const p of S.pendentes){
+      if(!allow(ccF,p.cc)||!allow(sitF,statusOf(p)))continue;
+      totalP++;
+      tmap[p.treinamento]=(tmap[p.treinamento]||0)+1;
+    }
+  }
+
+  // Conformity uses only filtered internal people, without changing its original rule.
+  let confTotal=0,confOk=0;
+  if(allow(fonteF,'interno')){
+    for(const p of Object.values(S.pessoaMap)){
+      if(!isActive(p.situacao)||!allow(ccF,p.cc)||!allow(sitF,p.situacao))continue;
+      confTotal++;
+      const req=getReqTrainings(p.cargo);
+      if(!req||!req.length||req.every(tn=>!!findTraining(p.trainings,tn)))confOk++;
+    }
+  }
+  const confPct=confTotal?Math.round(confOk/confTotal*100):0;
+  const sv=(id,v)=>{const el=$(id);if(el)el.textContent=v};
+  sv('k-colab',activePeople.size);sv('k-venc',venc);sv('k-p30',p30);sv('k-p45',p45);sv('k-pend',totalP);sv('k-conf',confPct+'%');
+
+  const donutSegs=[
+    {l:'Em dia',v:stCounts.ok,c:DONUT_COLORS.ok},{l:'Vencidos',v:stCounts.vencido,c:DONUT_COLORS.vencido},
+    {l:'15-30 dias',v:stCounts.p30,c:DONUT_COLORS.p30},{l:'30-45 dias',v:stCounts.p45,c:DONUT_COLORS.p45},
+    {l:'45-60 dias',v:stCounts.p60,c:DONUT_COLORS.p60},{l:'Sem data',v:stCounts.sem,c:DONUT_COLORS.sem},
+    {l:'Pendentes',v:totalP,c:DONUT_COLORS.pend}
+  ].filter(x=>x.v>0);
+  const dn=$('dash-donut');if(dn)dn.innerHTML=svgDonut(donutSegs,220);
+
+  const dalRows=alertRows.slice(0,8),da=$('dash-alerts');
+  if(da)da.innerHTML=dalRows.length?`<table style="font-size:12px;width:100%;border-collapse:collapse">
+    <thead><tr><th style="background:var(--dk);color:#fff;padding:6px 8px;font-size:9.5px;text-align:left">Nome</th><th style="background:var(--dk);color:#fff;padding:6px 8px;font-size:9.5px">Treinamento</th><th style="background:var(--dk);color:#fff;padding:6px 8px;font-size:9.5px">Dias</th><th style="background:var(--dk);color:#fff;padding:6px 8px;font-size:9.5px">Status</th></tr></thead>
+    <tbody>${dalRows.map(a=>`<tr class="${rCls(a.status)}" style="cursor:pointer" onclick="goAudit('${esc(a.nome).replace(/'/g,"\\'")}')"><td style="padding:5px 8px;border-bottom:1px solid #eef1f5"><strong>${esc(tr(a.nome,24))}</strong></td><td style="padding:5px 8px;border-bottom:1px solid #eef1f5;font-size:11px" title="${esc(a.treinamento)}">${esc(tr(a.treinamento,32))}</td><td style="padding:5px 8px;border-bottom:1px solid #eef1f5;font-weight:700;color:${a.status==='vencido'?'var(--rd)':'var(--am)'}">${a.dias<0?Math.abs(a.dias)+'d atrás':a.dias+'d'}</td><td style="padding:5px 8px;border-bottom:1px solid #eef1f5">${bSt(a.status)}</td></tr>`).join('')}</tbody>
+    </table>`:'<div class="empty" style="padding:16px"><div class="ei">✅</div><div class="et" style="font-size:12px">Sem alertas</div></div>';
+
+  const topT=Object.entries(tmap).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([l,v])=>({l,v,c:'var(--rd)'}));
+  const dt=$('dash-top-trei');if(dt)dt.innerHTML=svgHBars(topT,130);
+  const topCC=Object.entries(ccV).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([l,v])=>({l:`CC ${l}`,v,c:'var(--or)'}));
+  const dcc=$('dash-top-cc');if(dcc)dcc.innerHTML=svgHBars(topCC,100);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SVG CHARTS
+// ══════════════════════════════════════════════════════════════════
+function svgDonut(segs,sz=180){
+  const tot=segs.reduce((s,x)=>s+x.v,0);
+  if(!tot)return'<div class="text-sm" style="padding:14px;text-align:center">Sem dados</div>';
+  const half=sz/2,r=half*0.78,ri=half*0.5;
+  let angle=-Math.PI/2;
+  const paths=segs.filter(s=>s.v).map(seg=>{
+    const sw=seg.v/tot*Math.PI*2,lg=sw>Math.PI?1:0;
+    const x1=half+r*Math.cos(angle),y1=half+r*Math.sin(angle);
+    const x2=half+r*Math.cos(angle+sw),y2=half+r*Math.sin(angle+sw);
+    const ix1=half+ri*Math.cos(angle+sw),iy1=half+ri*Math.sin(angle+sw);
+    const ix2=half+ri*Math.cos(angle),iy2=half+ri*Math.sin(angle);
+    const path=`<path d="M${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r} 0 ${lg},1 ${x2.toFixed(1)},${y2.toFixed(1)} L${ix1.toFixed(1)},${iy1.toFixed(1)} A${ri},${ri} 0 ${lg},0 ${ix2.toFixed(1)},${iy2.toFixed(1)} Z" fill="${seg.c}" opacity=".92"><title>${esc(seg.l)}: ${seg.v}</title></path>`;
+    angle+=sw;return path;
+  }).join('');
+  return`<div class="chart-wrap"><svg viewBox="0 0 ${sz} ${sz}" width="${sz}" height="${sz}" style="flex-shrink:0">
+    ${paths}
+    <text x="${half}" y="${half-7}" text-anchor="middle" font-size="22" font-weight="700" fill="#0f2744" font-family="DM Sans,Arial,sans-serif">${tot}</text>
+    <text x="${half}" y="${half+10}" text-anchor="middle" font-size="9.5" fill="#5a6a7a" font-family="DM Sans,Arial,sans-serif">REGISTROS</text>
+  </svg><div class="chart-legend">${segs.filter(s=>s.v).map(s=>`<div class="legend-item"><div class="legend-dot" style="background:${s.c}"></div><span style="flex:1;color:var(--mu)">${esc(s.l)}</span><strong>${s.v}</strong><span style="color:var(--mu);font-size:10px;min-width:32px;text-align:right">${Math.round(s.v/tot*100)}%</span></div>`).join('')}</div></div>`;
+}
+function svgHBars(data,lw=120){
+  if(!data.length)return'<p class="text-sm" style="padding:8px 0">Sem dados.</p>';
+  const mx=Math.max(...data.map(d=>d.v),1);
+  return`<div style="padding:2px 0">${data.map((d,i)=>`<div class="hbar"><div class="hbar-label" style="width:${lw}px" title="${esc(d.l)}">${esc(tr(d.l,20))}</div><div class="hbar-track"><div class="hbar-fill" style="width:${Math.max(4,Math.round(d.v/mx*100))}%;background:${d.c};transition:width .5s ease ${i*.03}s"></div><div class="hbar-val">${d.v}</div></div></div>`).join('')}</div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// TRAINING PICKER
+// ══════════════════════════════════════════════════════════════════
+function renderTP(){
+  const q=norm($('tp-search')?.value||'');
+  const list=$('tp-list');if(!list)return;
+  if(!S.allTrainings.length){list.innerHTML='<div style="padding:20px;text-align:center;color:var(--mu);font-size:12px">Carregue os dados primeiro.</div>';return}
+  const vis=q?S.allTrainings.filter(t=>norm(t).includes(q)||bgScore(norm(t),q)>0.3):S.allTrainings;
+  list.innerHTML=vis.length?vis.map(t=>`<div class="tp-item" onclick="tpToggle('${esc(t).replace(/'/g,"\\'")}')"><input type="checkbox" ${_tpSel.has(t)?'checked':''} style="pointer-events:none"><span style="flex:1;font-size:11.5px">${esc(t)}</span></div>`).join(''):'<div style="padding:14px;text-align:center;color:var(--mu);font-size:12px">Nenhum resultado.</div>';
+  const c=$('tp-count');if(c)c.textContent=_tpSel.size>0?`${_tpSel.size} selecionado(s)`:'';
+}
+function tpToggle(t){if(_tpSel.has(t))_tpSel.delete(t);else _tpSel.add(t);renderTP()}
+function tpAll(v){S.allTrainings.forEach(t=>v?_tpSel.add(t):_tpSel.delete(t));renderTP()}
+function switchPTab(tab){
+  S.ui.ptTab=tab;
+  ['trs','pess'].forEach(id=>{const el=$('ptab-'+id);if(el){el.className='atab'+(tab===id?' active':'');el.style.color=tab===id?'var(--bl)':'var(--mu)';el.style.borderBottom=tab===id?'3px solid var(--or)':'3px solid transparent'}});
+}
+
+// ══════════════════════════════════════════════════════════════════
+// RENDER FUNCTIONS
+// ══════════════════════════════════════════════════════════════════
+const R={
+  int(){
+    const nQ=norm($('ii-nome')?.value||''),cQ=norm($('ii-cargo')?.value||''),tQ=norm($('ii-trei')?.value||'');
+    const sitF=MSEL.vals('ii-sit'),stF=MSEL.vals('ii-st'),ccF=MSEL.vals('ii-cc');
+    let rows=S.pivotado.filter(r=>{
+      if(nQ&&!norm(r.nome).includes(nQ)&&bgScore(norm(r.nome),nQ)<FTHRESH)return false;
+      if(cQ&&!norm(r.cargo).includes(cQ))return false;
+      if(tQ&&!norm(r.treinamento).includes(tQ)&&bgScore(norm(r.treinamento),tQ)<FTHRESH)return false;
+      if(sitF&&!sitF.includes(r.situacao))return false;
+      if(ccF&&!ccF.includes(r.cc))return false;
+      if(stF){const st=aSt(r.vencimento,r.dataReal);if(!stF.includes(st))return false}
+      return true;
+    });
+    rows=applySort(rows,'int',{cc:r=>r.cc,nome:r=>r.nome,treinamento:r=>r.treinamento,dataReal:r=>r.dataReal,vencimento:r=>r.vencimento});
+    const pg=paginate(rows,'int');
+    const tb=$('tb-int');if(!tb)return;
+    tb.innerHTML=pg.map(r=>{const st=aSt(r.vencimento,r.dataReal);return`<tr class="${rCls(st)} row-link" onclick="goAudit('${esc(r.nome).replace(/'/g,"\\'")}')"><td>${esc(r.cc)}</td><td><strong>${esc(r.nome)}</strong></td><td>${esc(tr(r.cargo,26))}</td><td>${bSt(r.situacao.toLowerCase())}</td><td title="${esc(r.treinamento)}">${esc(tr(r.treinamento,44))}</td><td>${fDate(r.dataReal)}</td><td>${fDate(r.vencimento)}</td><td>${bSt(st)}</td></tr>`}).join('')||emRow(8);
+    pager('pg-int','int',rows.length,R.int);
+  },
+  ext(){
+    const nQ=norm($('ei-nome')?.value||''),cQ=norm($('ei-cargo')?.value||''),tQ=norm($('ei-trei')?.value||'');
+    const sitF=MSEL.vals('ei-sit'),vstF=MSEL.vals('ei-vst'),ccF=MSEL.vals('ei-cc');
+    let rows=[];
+    for(const p of S.externos){
+      if(nQ&&!norm(p.nome).includes(nQ)&&bgScore(norm(p.nome),nQ)<FTHRESH)continue;
+      if(cQ&&!norm(p.cargo).includes(cQ))continue;
+      if(sitF&&!sitF.includes(p.status))continue;
+      if(ccF&&!ccF.includes(p.contrato))continue;
+      for(const t of p.treinamentos){
+        if(tQ&&!norm(t.nome).includes(tQ)&&bgScore(norm(t.nome),tQ)<FTHRESH)continue;
+        const st=aSt(t.dataValidade,t.dataAprov);
+        if(vstF&&!vstF.includes(st))continue;
+        rows.push({p,t,st});
+      }
+    }
+    rows=applySort(rows,'ext',{nome:x=>x.p.nome,cargo:x=>x.p.cargo,status:x=>x.p.status,treinamento:x=>x.t.nome,dataAprov:x=>x.t.dataAprov,dataValidade:x=>x.t.dataValidade});
+    const pg=paginate(rows,'ext');
+    const tb=$('tb-ext');if(!tb)return;
+    tb.innerHTML=pg.map(({p,t,st})=>`<tr class="${rCls(st)} row-link" onclick="goAudit('${esc(p.nome).replace(/'/g,"\\'")}')"><td><strong>${esc(p.nome)}</strong></td><td><small>${esc(p.cpf||'—')}</small></td><td>${esc(tr(p.cargo,24))}</td><td>${bSt(p.status.toLowerCase())}</td><td><small>${esc(p.contrato||'—')}</small></td><td title="${esc(t.nome)}">${esc(tr(t.nome,40))}</td><td>${fDate(t.dataAprov)}</td><td>${fDate(t.dataValidade)}</td><td>${st==='sem'?'<span class="badge b-sem">Indeterm.</span>':bSt(st)}</td></tr>`).join('')||emRow(9);
+    pager('pg-ext','ext',rows.length,R.ext);
+  },
+  uni(){
+    const nQ=norm($('ui-nome')?.value||''),cQ=norm($('ui-cargo')?.value||''),tQ=norm($('ui-trei')?.value||'');
+    const fF=MSEL.vals('ui-fonte'),stF=MSEL.vals('ui-st'),ccF=MSEL.vals('ui-cc'),sitF=MSEL.vals('ui-sit');
+    let rows=S.unifiedRows.filter(r=>{
+      if(nQ&&!norm(r.nome).includes(nQ)&&bgScore(norm(r.nome),nQ)<FTHRESH)return false;
+      if(tQ&&!norm(r.treinamento).includes(tQ)&&bgScore(norm(r.treinamento),tQ)<FTHRESH)return false;
+      if(cQ&&!norm(r.cargo).includes(cQ))return false;
+      if(fF&&!fF.includes(r.fonte))return false;
+      if(ccF&&!ccF.includes(r.cc))return false;
+      if(sitF&&!sitF.includes(r.situacao))return false;
+      if(stF){const st=aSt(r.vencimento,r.dataReal);if(!stF.includes(st))return false}
+      return true;
+    });
+    rows=applySort(rows,'uni',{nome:r=>r.nome,treinamento:r=>r.treinamento,dataReal:r=>r.dataReal,vencimento:r=>r.vencimento});
+    const pg=paginate(rows,'uni');
+    const tb=$('tb-uni');if(!tb)return;
+    tb.innerHTML=pg.map(r=>{const st=aSt(r.vencimento,r.dataReal);return`<tr class="${rCls(st)} row-link" onclick="goAudit('${esc(r.nome).replace(/'/g,"\\'")}')"><td>${r.fonte==='interno'?'<span class="badge b-int">Int.</span>':'<span class="badge b-ext">Ext.</span>'}</td><td><strong>${esc(r.nome)}</strong></td><td>${esc(tr(r.cargo,24))}</td><td><small>${esc(r.cc||'—')}</small></td><td>${bSt((r.situacao||'').toLowerCase())}</td><td title="${esc(r.treinamento)}">${esc(tr(r.treinamento,40))}</td><td>${fDate(r.dataReal)}</td><td>${fDate(r.vencimento)}</td><td>${bSt(st)}</td></tr>`}).join('')||emRow(9);
+    pager('pg-uni','uni',rows.length,R.uni);
+  },
+  audit(){
+    const q=($('aud-q')?.value||'').trim();
+    const fF=MSEL.vals('aud-fonte'),sitF=MSEL.vals('aud-sit'),ccF=MSEL.vals('aud-cc');
+    const el=$('aud-res');if(!el)return;
+    if(!q&&!ccF&&!sitF&&!fF){el.innerHTML='<div class="empty"><div class="ei">🔍</div><div class="et">Digite um nome ou use os filtros</div></div>';return}
+    const nq=norm(q),cpfQ=nCPF(q),res=[];
+    const auditCandidates=[
+      ...Object.values(S.pessoaMap).map(p=>({nome:p.nome,cpf:p.cpf})),
+      ...S.externos.map(p=>({nome:p.nome,cpf:p.cpf}))
+    ];
+    const exactName=!!nq&&auditCandidates.some(p=>norm(p.nome)===nq);
+    const exactCPF=cpfQ.length>5&&auditCandidates.some(p=>nCPF(p.cpf)===cpfQ);
+    const matchesAuditPerson=p=>{
+      if(!q)return true;
+      const pn=norm(p.nome),pc=nCPF(p.cpf);
+      if(exactCPF)return pc===cpfQ;
+      if(exactName)return pn===nq;
+      if(q.length<2)return false;
+      return pn.includes(nq)||(cpfQ.length>5&&pc.includes(cpfQ))||bgScore(pn,nq)>=FTHRESH;
+    };
+    if(!fF||fF.includes('interno')){
+      Object.values(S.pessoaMap).filter(p=>{
+        if(!matchesAuditPerson(p))return false;
+        if(sitF&&!sitF.includes(p.situacao))return false;
+        if(ccF&&!ccF.includes(p.cc))return false;
+        return true;
+      }).forEach(p=>res.push({fonte:'interno',nome:p.nome,cargo:p.cargo,situacao:p.situacao,cpf:p.cpf,email:p.email,cc:p.cc,trainings:Object.values(p.trainings)}));
+    }
+    if(!fF||fF.includes('externo')){
+      S.externos.filter(p=>{
+        if(!matchesAuditPerson(p))return false;
+        if(sitF&&!sitF.includes(p.status))return false;
+        if(ccF&&!ccF.includes(p.contrato))return false;
+        return true;
+      }).forEach(p=>{
+        let em='';const gp=p.cpf?(S.pessoaMap[p.cpf]||Object.values(S.pessoaMap).find(x=>x.cpf===p.cpf)):null;if(gp)em=gp.email||'';
+        res.push({fonte:'externo',nome:p.nome,cargo:p.cargo,situacao:p.status,cpf:p.cpf,email:em,cc:p.contrato||'',trainings:p.treinamentos.map(t=>({nome:t.nome,dataReal:t.dataAprov,vencimento:t.dataValidade}))});
+      });
+    }
+    if(!res.length){el.innerHTML='<div class="empty"><div class="ei">👤</div><div class="et">Colaborador não encontrado</div></div>';return}
+    el.innerHTML=res.map(p=>buildAudCard(p)).join('');
+  },
+  alrt(){
+    const tab=S.ui.alrtTab;
+    const nQ=norm($('al-nome')?.value||''),ccF=MSEL.vals('al-cc'),fF=MSEL.vals('al-fonte');
+    let rows;
+    if(tab==='pend'){
+      rows=S.pendentes.filter(a=>(!nQ||norm(a.nome).includes(nQ))&&(!ccF||ccF.includes(a.cc))&&(!fF||fF.includes('interno')));
+    }else{
+      rows=S.allAlerts.filter(a=>a.status===tab&&(!nQ||norm(a.nome).includes(nQ))&&(!ccF||ccF.includes(a.cc))&&(!fF||fF.includes(a.fonte)));
+    }
+    rows=applySort(rows,'alr',{fonte:r=>r.fonte,nome:r=>r.nome,cargo:r=>r.cargo,cc:r=>r.cc,treinamento:r=>r.treinamento,vencimento:r=>r.vencimento,dias:r=>r.dias});
+    const pg=paginate(rows,'alrt');
+    const tb=$('tb-alrt');if(!tb)return;
+    tb.innerHTML=pg.map(a=>{
+      const dt=a.dias!=null?(a.dias<0?`${Math.abs(a.dias)}d atrás`:`${a.dias}d`):'—';
+      const emBtn=a.email?`<button class="btn btn-e btn-sm" onclick="event.stopPropagation();openEmailById(storeED('${esc(a.email)}','${esc(a.nome)}',[{nome:'${esc(a.treinamento)}',vencimento:'${fDate(a.vencimento)}',dataReal:'${fDate(a.dataReal)}'}]))">✉️</button>`:'—';
+      return`<tr class="${rCls(a.status)} row-link" onclick="goAudit('${esc(a.nome).replace(/'/g,"\\'")}')"><td>${a.fonte==='interno'?'<span class="badge b-int">Int.</span>':'<span class="badge b-ext">Ext.</span>'}</td><td><strong>${esc(a.nome)}</strong></td><td>${esc(tr(a.cargo,22))}</td><td><small>${esc(a.cc||'—')}</small></td><td title="${esc(a.treinamento)}">${esc(tr(a.treinamento,40))}</td><td>${fDate(a.vencimento)}</td><td style="font-weight:700;color:${a.status==='vencido'?'var(--rd)':'var(--am)'}">${dt}</td><td>${emBtn}</td></tr>`;
+    }).join('')||emRow(8,'Nenhum treinamento nesta categoria.');
+    pager('pg-alrt','alrt',rows.length,R.alrt);
+  },
+  conf(){
+    const nQ=norm($('fc-nome')?.value||''),cQ=norm($('fc-cargo')?.value||'');
+    const ccF=MSEL.vals('fc-cc'),stF=MSEL.vals('fc-st');
+    const el=$('conf-res');if(!el)return;
+    if(!S.gtsLoaded){el.innerHTML='<div class="empty"><div class="ei">📂</div><div class="et">Carregue o arquivo GTS primeiro</div></div>';return}
+    const allConfPersons=Object.values(S.pessoaMap);
+    const exactName=nQ&&allConfPersons.some(p=>norm(p.nome)===nQ);
+    const persons=allConfPersons.filter(p=>{
+      if(!isActive(p.situacao))return false;
+      if(nQ){
+        if(exactName&&norm(p.nome)!==nQ)return false;
+        if(!exactName&&!norm(p.nome).includes(nQ)&&bgScore(norm(p.nome),nQ)<FTHRESH)return false;
+      }
+      if(cQ&&!norm(p.cargo).includes(cQ))return false;
+      if(ccF&&!ccF.includes(p.cc))return false;
+      return true;
+    }).slice(0,80);
+    if(!persons.length){el.innerHTML='<div class="empty"><div class="ei">🔍</div><div class="et">Nenhum colaborador encontrado</div></div>';return}
+    let html='',shown=0;
+    for(const p of persons){
+      const req=getReqTrainings(p.cargo);
+      if(!req){if(stF&&stF.length)continue;html+=`<div style="padding:9px 13px;margin-bottom:7px;background:#f8f9fa;border-radius:var(--r);border:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:center"><div><strong>${esc(p.nome)}</strong><br><small>${esc(p.cargo)}</small></div><span class="badge b-sem">Cargo não mapeado</span></div>`;shown++;continue}
+      // Check BOTH internal and external trainings with smart matching
+      const pExternos=S.externos.filter(e=>e.cpf===p.cpf||norm(e.nome)===norm(p.nome));
+      const items=req.map(tn=>{
+        // Try internal trainings first
+        let found=findTraining(p.trainings,tn);
+        let fromExt=false;
+        // Also try external trainings
+        if(!found&&pExternos.length){
+          const extT=findTrainingInExternos(pExternos,tn);
+          if(extT){found={nome:extT.nome,dataReal:extT.dataAprov,vencimento:extT.dataValidade};fromExt=true}
+        }
+        const st=found?(aSt(found.vencimento,found.dataReal)||'ok'):'pendente';
+        return{nome:tn,st,dataReal:found?.dataReal||null,vencimento:found?.vencimento||null,fromExt};
+      });
+      const tot=items.length,okC=items.filter(i=>i.st==='ok').length,pct=tot>0?Math.round(okC/tot*100):100;
+      const hasI=items.some(i=>i.st!=='ok');
+      if(stF&&stF.length){if(stF.includes('ok')&&!stF.includes('nok')&&hasI)continue;if(stF.includes('nok')&&!stF.includes('ok')&&!hasI)continue}
+      const bc=pct>=80?'var(--gn)':pct>=50?'var(--am)':'var(--rd)';
+      html+=`<div style="margin-bottom:16px"><div class="c-phdr"><div style="display:flex;justify-content:space-between;align-items:center"><div><strong style="font-size:13px">${esc(p.nome)}</strong><div style="font-size:11px;color:rgba(255,255,255,.58);margin-top:2px">${esc(p.cargo)} · ${esc(p.situacao)} · CC ${esc(p.cc)}</div></div><div style="text-align:right"><span style="font-size:20px;font-weight:700">${pct}%</span><div style="font-size:9.5px;color:rgba(255,255,255,.54)">${okC}/${tot}</div><div class="cbar" style="width:90px;margin-top:3px"><div class="cbar-f" style="width:${pct}%;background:${bc}"></div></div></div></div></div><div style="background:#fff;border:1px solid var(--bdr);border-top:none;border-radius:0 0 var(--r) var(--r);padding:11px">${items.map(it=>{const ic={ok:'✅',pendente:'❌',vencido:'🔴',p30:'🟣',p45:'🟠',p60:'🟡',sem:'⚪'}[it.st]||'⚪';return`<div class="ci"><span class="ci-ic">${ic}</span><span class="ci-n">${esc(it.nome)}${it.fromExt?' <span class="badge b-ext" style="font-size:9px">SGC</span>':''}</span><span class="ci-d">${it.dataReal?'Real: '+fDate(it.dataReal):''}</span><span class="ci-d">${it.vencimento?'Vcto: '+fDate(it.vencimento):''}</span>${bSt(it.st)}</div>`}).join('')}</div></div>`;
+      shown++;
+    }
+    if(!shown)html='<div class="empty"><div class="ei">✅</div><div class="et">Nenhum resultado com esses filtros</div></div>';
+    el.innerHTML=html;
+  },
+  cc(){
+    const ccF=MSEL.vals('cc-sel'),sitF=MSEL.vals('cc-sit'),nQ=norm($('cc-nome')?.value||'');
+    const el=$('cc-res');if(!el)return;
+    if(!ccF||!ccF.length){el.innerHTML='<div class="empty"><div class="ei">🏗️</div><div class="et">Selecione um ou mais CCs</div></div>';return}
+    const pmap={};
+    for(const r of S.pivotado){if(!ccF.includes(r.cc))continue;const k=r.cpf||norm(r.nome);if(!pmap[k])pmap[k]={nome:r.nome,cargo:r.cargo,situacao:r.situacao,cpf:r.cpf,cc:r.cc,fonte:'interno'}}
+    for(const p of S.externos){if(!ccF.includes(p.contrato))continue;const k=p.cpf||norm(p.nome);if(!pmap[k])pmap[k]={nome:p.nome,cargo:p.cargo,situacao:p.status,cpf:p.cpf,cc:p.contrato,fonte:'externo'}}
+    let persons=Object.values(pmap);
+    if(sitF)persons=persons.filter(p=>sitF.includes(p.situacao));
+    if(nQ)persons=persons.filter(p=>norm(p.nome).includes(nQ)||bgScore(norm(p.nome),nQ)>=FTHRESH);
+    persons.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+    for(const p of persons)p.alertCount=S.allAlerts.filter(a=>a.cpf===p.cpf||a.nome===p.nome).length;
+    const pg=paginate(persons,'cc');
+    const tot=persons.length,ativos=persons.filter(p=>isActive(p.situacao)).length;
+    el.innerHTML=`<div style="display:flex;gap:12px;margin-bottom:11px;font-size:12px;color:var(--mu)"><span><strong style="color:var(--dk)">${tot}</strong> encontrados</span><span><strong style="color:var(--gn)">${ativos}</strong> ativos/lib.</span></div>`;
+    el.innerHTML+=pg.map(p=>`<div class="cc-row"><div><div class="cc-name">${esc(p.nome)}</div><div style="font-size:10.5px;color:var(--mu)">${esc(p.cargo)} · CC ${esc(p.cc)}</div></div>${bSt(p.situacao.toLowerCase())}${p.fonte==='interno'?'<span class="badge b-int">GTS</span>':'<span class="badge b-ext">SGC</span>'}${p.alertCount>0?`<span class="badge b-vencido" style="font-size:10px">⚠️ ${p.alertCount}</span>`:''}CPF: ${esc(p.cpf||'—')}<button class="btn btn-o btn-sm mla" onclick="goAudit('${esc(p.nome).replace(/'/g,"\\'")}')">🔍 Ver</button></div>`).join('');
+    pager('pg-cc','cc',persons.length,R.cc);
+  },
+  pc(){
+    const nQ=($('pc-nome')?.value||'').trim();
+    const ccF=MSEL.vals('pc-cc'),sitF=MSEL.vals('pc-sit'),fF=MSEL.vals('pc-fonte');
+    const el=$('pc-res');if(!el)return;
+    const nq=norm(nQ),cpfQ=nCPF(nQ);
+    if(nQ.length<2&&!ccF&&!sitF){el.innerHTML='<div class="empty"><div class="ei">👤</div><div class="et">Digite ao menos 2 letras ou use filtros</div></div>';return}
+    const res=[];
+    if(!fF||fF.includes('interno')){
+      Object.values(S.pessoaMap).filter(p=>{
+        if(nQ.length>=2&&!norm(p.nome).includes(nq)&&!(cpfQ.length>5&&p.cpf?.includes(cpfQ))&&bgScore(norm(p.nome),nq)<FTHRESH)return false;
+        if(ccF&&!ccF.includes(p.cc))return false;
+        if(sitF&&!sitF.includes(p.situacao))return false;
+        return true;
+      }).forEach(p=>res.push({nome:p.nome,cargo:p.cargo,situacao:p.situacao,cpf:p.cpf,cc:p.cc,fonte:'interno',email:p.email,trainings:Object.values(p.trainings)}));
+    }
+    if(!fF||fF.includes('externo')){
+      S.externos.filter(p=>{
+        if(nQ.length>=2&&!norm(p.nome).includes(nq)&&!(cpfQ.length>5&&p.cpf?.includes(cpfQ))&&bgScore(norm(p.nome),nq)<FTHRESH)return false;
+        if(ccF&&!ccF.includes(p.contrato))return false;
+        if(sitF&&!sitF.includes(p.status))return false;
+        return true;
+      }).forEach(p=>res.push({nome:p.nome,cargo:p.cargo,situacao:p.status,cpf:p.cpf,cc:p.contrato||'',fonte:'externo',email:'',trainings:p.treinamentos.map(t=>({nome:t.nome,dataReal:t.dataAprov,vencimento:t.dataValidade}))}));
+    }
+    if(!res.length){el.innerHTML='<div class="empty"><div class="ei">👤</div><div class="et">Nenhum colaborador encontrado</div></div>';return}
+    el.innerHTML=res.slice(0,30).map(p=>{
+      const tot=p.trainings.length;
+      const venc=p.trainings.filter(t=>aSt(t.vencimento,t.dataReal)==='vencido').length;
+      const aV=p.trainings.filter(t=>['p30','p45','p60'].includes(aSt(t.vencimento,t.dataReal))).length;
+      return`<div class="pc-person">
+        <div class="pc-hdr">
+          <div><strong style="font-size:13px">${esc(p.nome)}</strong><div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">${esc(p.cargo)} · CC ${esc(p.cc||'—')}</div></div>
+          <div style="display:flex;gap:6px;align-items:center">${bSt(p.situacao.toLowerCase())}${p.fonte==='interno'?'<span class="badge b-int">GTS</span>':'<span class="badge b-ext">SGC</span>'}</div>
+        </div>
+        <div class="pc-body">
+          <div style="font-size:11px;color:var(--mu);margin-bottom:9px">${tot} treinamentos${venc>0?` · <span style="color:var(--rd);font-weight:700">${venc} vencidos</span>`:''}${aV>0?` · <span style="color:var(--am);font-weight:700">${aV} a vencer</span>`:''}</div>
+          <table style="width:100%;font-size:11.5px;border-collapse:collapse">
+            <thead><tr>
+              <th style="background:var(--bg);color:var(--mu);font-size:9px;padding:4px 8px;text-align:left;font-weight:700;letter-spacing:.5px">Treinamento</th>
+              <th style="background:var(--bg);color:var(--mu);font-size:9px;padding:4px 8px;text-align:left;font-weight:700">Realização</th>
+              <th style="background:var(--bg);color:var(--mu);font-size:9px;padding:4px 8px;text-align:left;font-weight:700">Vencimento</th>
+              <th style="background:var(--bg);color:var(--mu);font-size:9px;padding:4px 8px;text-align:left;font-weight:700">Status</th>
+            </tr></thead>
+            <tbody>${p.trainings.map(t=>{const st=aSt(t.vencimento,t.dataReal);return`<tr class="${rCls(st)}"><td style="padding:5px 8px;border-bottom:1px solid #f0f2f5" title="${esc(t.nome)}">${esc(tr(t.nome,48))}</td><td style="padding:5px 8px;border-bottom:1px solid #f0f2f5">${fDate(t.dataReal)}</td><td style="padding:5px 8px;border-bottom:1px solid #f0f2f5">${fDate(t.vencimento)}</td><td style="padding:5px 8px;border-bottom:1px solid #f0f2f5">${bSt(st)}</td></tr>`}).join('')}</tbody>
+          </table>
+        </div>
+      </div>`;
+    }).join('')+(res.length>30?`<p class="text-sm" style="text-align:center;padding:10px">Mostrando 30 de ${res.length}. Refine a busca.</p>`:'');
+  },
+  pt(){
+    const el=$('pt-res');if(!el)return;
+    const sel=[..._tpSel];
+    if(!sel.length){el.innerHTML='<div class="empty" style="padding:20px"><div class="ei">🎯</div><div class="et">Selecione ao menos um treinamento</div></div>';return}
+    const ccF=MSEL.vals('pt-cc'),sitF=MSEL.vals('pt-sit'),stF=MSEL.vals('pt-st');
+    const allP=[];
+    for(const p of Object.values(S.pessoaMap)){
+      if(!isActive(p.situacao))continue;
+      if(ccF&&!ccF.includes(p.cc))continue;
+      if(sitF&&!sitF.includes(p.situacao))continue;
+      allP.push({fonte:'interno',nome:p.nome,cargo:p.cargo,situacao:p.situacao,cpf:p.cpf,cc:p.cc,trainings:p.trainings});
+    }
+    for(const p of S.externos){
+      if(!isActive(p.status))continue;
+      if(ccF&&!ccF.includes(p.contrato))continue;
+      if(sitF&&!sitF.includes(p.status))continue;
+      const tm={};p.treinamentos.forEach(t=>{tm[norm(t.nome)]={nome:t.nome,dataReal:t.dataAprov,vencimento:t.dataValidade}});
+      allP.push({fonte:'externo',nome:p.nome,cargo:p.cargo,situacao:p.status,cpf:p.cpf,cc:p.contrato||'',trainings:tm});
+    }
+    const tab=S.ui.ptTab;
+    if(tab==='trs'){
+      let html='';
+      for(const tName of sel){
+        const rows=[];
+        for(const p of allP){
+          const found=findTraining(p.trainings,tName);
+          const st=found?aSt(found.vencimento,found.dataReal):'pendente';
+          if(stF&&!stF.includes(st))continue;
+          rows.push({nome:p.nome,cargo:p.cargo,cc:p.cc,fonte:p.fonte,st,dataReal:found?.dataReal||null,vencimento:found?.vencimento||null});
+        }
+        const venc=rows.filter(r=>r.st==='vencido').length,aV=rows.filter(r=>['p30','p45','p60'].includes(r.st)).length;
+        const ok=rows.filter(r=>r.st==='ok').length,pend=rows.filter(r=>r.st==='pendente').length;
+        html+=`<div style="margin-bottom:14px;border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden">
+          <div style="background:linear-gradient(135deg,var(--dk),var(--bl));color:#fff;padding:11px 15px;display:flex;justify-content:space-between;align-items:center">
+            <strong style="font-size:13px">${esc(tr(tName,60))}</strong>
+            <span style="font-size:11px;color:rgba(255,255,255,.6)">${rows.length} colaboradores</span>
+          </div>
+          <div style="padding:12px 15px;background:#fff">
+            <div class="ptstat"><div class="ps ps-o">✅ ${ok} em dia</div><div class="ps ps-a">⚠️ ${aV} a vencer</div><div class="ps ps-v">🔴 ${venc} vencidos</div><div class="ps ps-p">❌ ${pend} pendentes</div></div>
+            ${rows.length?`<div class="tw"><table><thead><tr><th>Nome</th><th>CC</th><th>Cargo</th><th>Fonte</th><th>Realização</th><th>Vencimento</th><th>Status</th></tr></thead>
+            <tbody>${rows.map(r=>`<tr class="${rCls(r.st)} row-link" onclick="goAudit('${esc(r.nome).replace(/'/g,"\\'")}')"><td><strong>${esc(r.nome)}</strong></td><td><small>${esc(r.cc||'—')}</small></td><td>${esc(tr(r.cargo,22))}</td><td>${r.fonte==='interno'?'<span class="badge b-int">GTS</span>':'<span class="badge b-ext">SGC</span>'}</td><td>${fDate(r.dataReal)}</td><td>${fDate(r.vencimento)}</td><td>${bSt(r.st)}</td></tr>`).join('')}
+            </tbody></table></div>`:'<p class="text-sm">Nenhum colaborador com os filtros atuais.</p>'}
+          </div>
+        </div>`;
+      }
+      el.innerHTML=html||'<div class="empty" style="padding:18px"><div class="et">Sem resultados</div></div>';
+    }else{
+      // By person matrix
+      const pStatus=[];
+      for(const p of allP){
+        const row={nome:p.nome,cargo:p.cargo,cc:p.cc,fonte:p.fonte,t:{}};
+        for(const tName of sel){const found=findTraining(p.trainings,tName);row.t[tName]=found?aSt(found.vencimento,found.dataReal):'pendente'}
+        pStatus.push(row);
+      }
+      const stC={'ok':'#27ae60','vencido':'#e74c3c','p30':'#8e44ad','p45':'#d35400','p60':'#0097A7','pendente':'#2980b9','sem':'#9e9e9e'};
+      const stI={'ok':'✓','vencido':'✗','p30':'!','p45':'!','p60':'!','pendente':'?','sem':'—'};
+      const colW=Math.max(55,Math.floor(360/sel.length));
+      el.innerHTML=`<div style="overflow-x:auto"><table><thead><tr><th>Nome</th><th>CC</th><th>Cargo</th>${sel.map(t=>`<th style="max-width:${colW}px;white-space:normal;font-size:8.5px;line-height:1.3" title="${esc(t)}">${esc(tr(t,14))}</th>`).join('')}</tr></thead><tbody>${pStatus.map(p=>`<tr><td class="row-link" onclick="goAudit('${esc(p.nome).replace(/'/g,"\\'")}')"><strong>${esc(p.nome)}</strong></td><td><small>${esc(p.cc||'—')}</small></td><td>${esc(tr(p.cargo,20))}</td>${sel.map(t=>{const st=p.t[t];return`<td style="text-align:center;background:${stC[st]||'#f5f5f5'}22;border-bottom:1px solid #eef1f5"><span style="color:${stC[st]||'#9e9e9e'};font-weight:700;font-size:13px">${stI[st]||'?'}</span></td>`}).join('')}</tr>`).join('')}</tbody></table></div>`;
+    }
+  }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// AUDIT CARD BUILDER
+// ══════════════════════════════════════════════════════════════════
+function buildAudCard(p){
+  const req=getReqTrainings(p.cargo)||[];
+  const allT=[...p.trainings];
+  const foundKeys=new Set(p.trainings.map(t=>norm(t.nome)));
+  for(const tn of req){
+    let found=!!findTraining(Object.fromEntries(p.trainings.map(t=>[norm(t.nome),t])),tn);
+    if(!found)allT.push({nome:tn,dataReal:null,vencimento:null,_pend:true});
+  }
+  const tot=allT.length,okC=allT.filter(t=>!t._pend&&aSt(t.vencimento,t.dataReal)==='ok').length;
+  const pct=tot>0?Math.round(okC/tot*100):0;
+  const bc=pct>=70?'var(--gn)':pct>=40?'var(--am)':'var(--rd)';
+  const urgent=allT.filter(t=>t._pend||['vencido','p30','p45','p60'].includes(aSt(t.vencimento,t.dataReal)));
+  const idx=storeED(p.email||'',p.nome,urgent.map(t=>({nome:t.nome,vencimento:fDate(t.vencimento),dataReal:fDate(t.dataReal)})));
+  const emBtn=p.email?`<button class="btn btn-e btn-sm" onclick="openEmailById(${idx})">✉️ Enviar Alerta</button>`:(p.email===''?`<span class="text-sm mla" style="color:var(--mu)">📧 sem e-mail</span>`:'');
+  const cards=tot?`<div class="acp-grid">${allT.map(t=>{const st=t._pend?'pendente':aSt(t.vencimento,t.dataReal);const cls={vencido:'t-vencido',p30:'t-p30',p45:'t-p45',p60:'t-p60',pendente:'t-pendente',sem:'t-sem'}[st]||'';return`<div class="acp-t ${cls}"><div class="acp-t-name">${esc(t.nome)}</div><div class="acp-t-info">${t.dataReal?`📅 ${fDate(t.dataReal)}<br>`:''}${t.vencimento?`🔔 ${fDate(t.vencimento)}<br>`:''}${bSt(st)}</div></div>`}).join('')}</div>`:'<p class="text-sm" style="padding:8px 0">Nenhum treinamento.</p>';
+  return`<div class="acp"><div class="acp-hdr"><div><div class="acp-name">${esc(p.nome)}</div><div class="acp-sub">${esc(p.cargo)} · ${esc(p.situacao)}${p.cc?' · CC '+esc(p.cc):''}</div>${p.cpf?`<div style="font-size:10px;color:rgba(255,255,255,.38);margin-top:2px">CPF: ${p.cpf}</div>`:''}</div><div style="text-align:right"><div style="font-size:21px;font-weight:700">${pct}%</div><div style="font-size:9.5px;color:rgba(255,255,255,.52)">Conformidade</div><div class="cbar" style="width:100px;margin-top:4px"><div class="cbar-f" style="width:${pct}%;background:${bc}"></div></div><div style="margin-top:7px">${p.fonte==='interno'?'<span class="badge b-int">GTS</span>':'<span class="badge b-ext">SGC</span>'}</div></div></div><div class="acp-body"><div class="fr" style="margin-bottom:10px;flex-wrap:wrap;gap:6px"><span class="text-sm">${tot} treinamentos · ${urgent.length} urgentes</span>${emBtn}<button class="btn btn-o btn-sm" onclick="doPrint('aud-res','Auditoria')">🖨️ Imprimir</button></div>${cards}</div></div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// EMAIL
+// ══════════════════════════════════════════════════════════════════
+function storeED(email,nome,trainings){const idx=++_EI;_ED[idx]={email,nome,trainings};return idx}
+function openEmailById(idx){const d=_ED[idx];if(!d||!d.email)return;openEmailFull(d.email,d.nome,d.trainings)}
+function openEmailFull(email,nome,trainings){
+  const today=new Date().toLocaleDateString('pt-BR');
+  const list=Array.isArray(trainings)?trainings:[trainings];
+  // Filter only urgent: vencido or <60 days
+  const urgent=list.filter(t=>{
+    if(typeof t==='string')return true; // if just name, include
+    const venc=t.vencimento&&t.vencimento!=='—'?pDate(t.vencimento):null;
+    if(!venc)return t._pend||false;
+    const d=dFrom(venc);return d===null||d<60;
+  });
+  if(!urgent.length){alert(`${nome} não possui treinamentos urgentes (vencidos ou a vencer em 60 dias).`);return}
+  const lines=urgent.map(t=>{
+    const nm=typeof t==='string'?t:(t.nome||String(t));
+    const venc=typeof t==='object'&&t.vencimento&&t.vencimento!=='—'?` (Vcto: ${t.vencimento})`:'';
+    return`  - ${nm}${venc}`;
+  }).join('\n');
+  const sub=encodeURIComponent(`Aviso de Vencimento de Treinamento – ${nome}`);
+  const body=encodeURIComponent(`Prezado(a) ${nome},\n\nIdentificamos os seguintes treinamentos com atenção urgente:\n\n${lines}\n\nPor favor, providencie a renovação dentro do prazo para garantir a conformidade com as normas de segurança.\n\nAtenciosamente,\nEquipe SSMA – Concremat Engenharia\n(Aviso gerado automaticamente em ${today})`);
+  window.location.href=`mailto:${email}?subject=${sub}&body=${body}`;
+}
+function emailAllVis(){
+  const tab=S.ui.alrtTab,nQ=norm($('al-nome')?.value||''),ccF=MSEL.vals('al-cc'),fF=MSEL.vals('al-fonte');
+  const src=tab==='pend'?S.pendentes.filter(a=>a.email&&(!nQ||norm(a.nome).includes(nQ))&&(!ccF||ccF.includes(a.cc))&&(!fF||fF.includes('interno'))):S.allAlerts.filter(a=>a.status===tab&&a.email&&(!nQ||norm(a.nome).includes(nQ))&&(!ccF||ccF.includes(a.cc))&&(!fF||fF.includes(a.fonte)));
+  if(!src.length){alert('Nenhum alerta visível com e-mail.');return}
+  if(src.length>20){alert(`Muitos (${src.length}). Filtre mais.`);return}
+  const emails=[...new Set(src.map(a=>a.email))];
+  const today=new Date().toLocaleDateString('pt-BR');
+  const sub=encodeURIComponent(`Aviso de Treinamentos – Concremat Engenharia`);
+  const lines=src.map(a=>`  - ${a.nome}: ${a.treinamento} (Vcto: ${fDate(a.vencimento)})`).join('\n');
+  const body=encodeURIComponent(`Prezado(a),\n\nSeguem treinamentos com situação crítica em ${today}:\n\n${lines}\n\nAtenciosamente,\nSSMA – Concremat Engenharia`);
+  window.location.href=`mailto:${emails.join(';')}?subject=${sub}&body=${body}`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// PRINT
+// ══════════════════════════════════════════════════════════════════
+const PCSS=`*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:11px;color:#1e2d3d;padding:18px}
+.acp,.pc-person{border:1px solid #ccc;border-radius:6px;margin-bottom:12px;page-break-inside:avoid;overflow:hidden}
+.acp-hdr,.pc-hdr{background:#0f2744;color:#fff;padding:12px 15px;display:flex;justify-content:space-between}
+.acp-name{font-size:14px;font-weight:700}.acp-sub{font-size:10px;color:rgba(255,255,255,.6);margin-top:2px}
+.acp-body,.pc-body{padding:12px 15px}.acp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px}
+.acp-t{border:1px solid #dde6ef;border-radius:5px;padding:7px 9px;border-left:3px solid #0078C0}
+.acp-t.t-vencido{border-left-color:#e74c3c}.acp-t.t-p30{border-left-color:#8e44ad}.acp-t.t-p45{border-left-color:#d35400}
+.acp-t.t-p60{border-left-color:#0097A7}.acp-t.t-pendente{border-left-color:#2980b9;background:#f0f8ff}
+.acp-t-name{font-size:9.5px;font-weight:700;margin-bottom:3px;line-height:1.3}.acp-t-info{font-size:9.5px;color:#5a6a7a}
+.badge{display:inline-flex;padding:1px 5px;border-radius:9px;font-size:8.5px;font-weight:700}
+.b-ok{background:#e6f9ee;color:#1a6b3a}.b-vencido{background:#ffebee;color:#b71c1c}
+.b-p30{background:#f3e5f5;color:#6a1b9a}.b-p45{background:#fff3e0;color:#bf360c}.b-p60{background:#e0f7fa;color:#006064}
+.b-pend,.b-pendente{background:#e3f2fd;color:#0d47a1}.b-sem{background:#f5f5f5;color:#757575}
+.b-ativ,.b-lib{background:#e6f9ee;color:#1a6b3a}.b-inat,.b-demob{background:#f5f5f5;color:#424242}
+.b-int{background:#e3f2fd;color:#0d47a1}.b-ext{background:#ede7f6;color:#4527a0}
+.cbar{height:5px;border-radius:3px;background:#dde6ef;overflow:hidden;margin-top:3px;width:85px}.cbar-f{height:100%;border-radius:3px}
+h1{font-size:15px;margin-bottom:4px;color:#0f2744}.hdr{margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #0f2744}
+table{width:100%;border-collapse:collapse;font-size:10.5px}th{background:#0f2744;color:#fff;padding:5px 7px;text-align:left;font-size:8.5px;font-weight:700}
+td{padding:4px 7px;border-bottom:1px solid #f0f2f5}.fr{display:flex;gap:7px}.btn{display:none}`;
+function doPrint(elId,title){
+  const el=$(elId);if(!el||el.children.length===0||el.innerHTML.includes('class="ei"')){alert('Nenhum conteúdo para imprimir.');return}
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>GTS – ${esc(title)}</title><style>${PCSS}</style></head><body>
+  <div class="hdr"><h1>GTS – ${esc(title)} – Concremat Engenharia</h1><div style="font-size:10px;color:#5a6a7a">Impresso em ${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})}</div></div>
+  ${el.innerHTML}
+  <script>window.onload=()=>{window.print();setTimeout(()=>window.close(),1000)}<\/script></body></html>`);
+  win.document.close();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// PAGINATION
+// ══════════════════════════════════════════════════════════════════
+function paginate(rows,k){const rpp=S.ui.rpp,max=Math.max(1,Math.ceil(rows.length/rpp));if(!S.ui.pages[k]||S.ui.pages[k]>max)S.ui.pages[k]=1;return rows.slice((S.ui.pages[k]-1)*rpp,S.ui.pages[k]*rpp)}
+function pager(elId,k,total,cb){
+  const el=$(elId);if(!el)return;const rpp=S.ui.rpp,max=Math.max(1,Math.ceil(total/rpp)),pg=S.ui.pages[k]||1;
+  if(!total){el.innerHTML='';return}S.ui._cbs[k]=cb;
+  const pages=new Set([1,max,pg-1,pg,pg+1].filter(p=>p>=1&&p<=max));let btns='',prev=0;
+  [...pages].sort((a,b)=>a-b).forEach(p=>{if(prev&&p-prev>1)btns+=`<span style="padding:0 3px;color:var(--mu)">…</span>`;btns+=`<button class="pb${p===pg?' active':''}" onclick="goPage('${k}',${p})">${p}</button>`;prev=p});
+  el.innerHTML=`<span class="pi">${total} registros · Pág ${pg}/${max}</span><button class="pb" onclick="goPage('${k}',${pg-1})" ${pg<=1?'disabled':''}>‹</button>${btns}<button class="pb" onclick="goPage('${k}',${pg+1})" ${pg>=max?'disabled':''}>›</button>`;
+}
+function goPage(k,pg){S.ui.pages[k]=Math.max(1,pg);if(S.ui._cbs[k])S.ui._cbs[k]()}
+
+// ══════════════════════════════════════════════════════════════════
+// FILE LIST
+// ══════════════════════════════════════════════════════════════════
+function renderFL(id,files,del){const el=$(id);if(!el)return;el.innerHTML=files.map((f,i)=>`<div class="fi"><span>📊</span><span class="fi-n">${esc(f.name)}</span><span class="fi-i">${esc(f.info||'')}</span>${del?`<span class="fi-x" onclick="delExt(${i})">✕</span>`:''}</div>`).join('')}
+function renderExtFL(){renderFL('fl-ext',S.extFiles.map(f=>({name:f.name,info:`${f.rows.length} colaboradores`})),true)}
+function delExt(i){S.extFiles.splice(i,1);mergeExt();allUpdate();renderExtFL()}
+
+// ══════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════════════════
+const VTITLES={import:'Importação',dash:'Dashboard',int:'Internos (GTS)',ext:'Externos – SGC',uni:'Visão Unificada',pt:'Pesquisa por Treinamento',pc:'Por Colaborador',cc:'Visão por CC',audit:'Auditoria / Fiscalização',alrt:'Alertas de Vencimento',conf:'Conformidade com a Matriz',rel:'Relatório para Auditoria'};
+function navigate(v){
+  S.ui.view=v;
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  const ve=$('view-'+v);if(ve)ve.classList.add('active');
+  document.querySelectorAll('.nav-item[data-view],.qn[data-view]').forEach(n=>n.classList.toggle('active',n.dataset.view===v));
+  const tt=$('topbar-title');if(tt)tt.textContent=VTITLES[v]||v;
+  const rf={int:R.int,ext:R.ext,uni:R.uni,alrt:R.alrt,conf:R.conf,cc:R.cc,pc:R.pc,rel:updateRelView};
+  if(rf[v])rf[v]();
+  if(v==='dash')updateDash();
+}
+function goAudit(nome){navigate('audit');const inp=$('aud-q');if(inp){inp.value=nome;R.audit()}}
+function filterAlrtTab(tab){S.ui.alrtTab=tab;navigate('alrt');document.querySelectorAll('.atab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));R.alrt()}
+
+// ══════════════════════════════════════════════════════════════════
+// EVENTS
+// ══════════════════════════════════════════════════════════════════
+document.querySelectorAll('.nav-item[data-view],.qn[data-view]').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.view)));
+document.querySelectorAll('.atab[data-tab]').forEach(el=>el.addEventListener('click',()=>{S.ui.alrtTab=el.dataset.tab;S.ui.pages.alrt=1;document.querySelectorAll('.atab').forEach(t=>t.classList.remove('active'));el.classList.add('active');R.alrt()}));
+$('fi-gts').addEventListener('change',e=>{if(e.target.files[0])loadGTS(e.target.files[0]);e.target.value=''});
+$('fi-ext').addEventListener('change',e=>{Array.from(e.target.files).forEach(f=>loadExt(f));e.target.value=''});
+function dropZ(id,cb){const el=$(id);if(!el)return;el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('over')});el.addEventListener('dragleave',()=>el.classList.remove('over'));el.addEventListener('drop',e=>{e.preventDefault();el.classList.remove('over');cb(Array.from(e.dataTransfer.files))})}
+dropZ('dz-gts',f=>{if(f[0])loadGTS(f[0])});
+dropZ('dz-ext',f=>f.forEach(x=>loadExt(x)));
+if(!('showDirectoryPicker' in window)){const b=$('scan-wrap');if(b)b.style.display='none'}
+
+// ══════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════
+const de=$('topbar-date');if(de)de.textContent=new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+// ═══ RELATÓRIO PARA AUDITORIA ═══
+function updateRelView(){
+  // Sync rel-cc with allCCs in case it was just built
+}
+
+function _getRelData(){
+  const ccF=MSEL.vals('rel-cc');
+  const fonteF=MSEL.vals('rel-fonte');
+  const treinSrc=document.querySelector('input[name="rel-trein-src"]:checked')?.value||'all';
+  // Collect persons
+  const pmap={};
+  if(!fonteF||fonteF.includes('interno')){
+    for(const r of S.pivotado){
+      if(ccF&&!ccF.includes(r.cc))continue;
+      const k=r.cpf||norm(r.nome);
+      if(!pmap[k])pmap[k]={nome:r.nome,cpf:r.cpf||'',cargo:r.cargo,situacao:r.situacao,cc:r.cc,fonte:'interno',trainings:{}};
+      const p=pmap[k],tk=norm(r.treinamento);
+      if(tk&&r.treinamento){const ex=p.trainings[tk];if(!ex||(r.vencimento&&(!ex.vencimento||r.vencimento>ex.vencimento))||(r.dataReal&&!ex.dataReal))p.trainings[tk]={nome:r.treinamento,dataReal:r.dataReal,vencimento:r.vencimento}}
+    }
+  }
+  if(!fonteF||fonteF.includes('externo')){
+    for(const p of S.externos){
+      if(ccF&&!ccF.includes(p.contrato))continue;
+      const k=p.cpf||norm(p.nome);
+      if(!pmap[k])pmap[k]={nome:p.nome,cpf:p.cpf||'',cargo:p.cargo,situacao:p.status,cc:p.contrato||'',fonte:'externo',trainings:{}};
+      const pm=pmap[k];
+      for(const t of p.treinamentos){const tk=norm(t.nome);if(tk)pm.trainings[tk]={nome:t.nome,dataReal:t.dataAprov,vencimento:t.dataValidade}}
+    }
+  }
+  const persons=Object.values(pmap).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  // Collect trainings
+  let trainings=[];
+  if(treinSrc==='matriz'){
+    const tset=new Set();
+    for(const p of persons){const req=getReqTrainings(p.cargo);if(req)req.forEach(t=>tset.add(t))}
+    trainings=[...tset].sort();
+  }else{
+    const tset=new Set();
+    for(const p of persons)for(const k of Object.keys(p.trainings))tset.add(p.trainings[k].nome);
+    trainings=[...tset].sort();
+  }
+  return{persons,trainings};
+}
+
+function previewRelatorio(){
+  const{persons,trainings}=_getRelData();
+  const el=document.getElementById('rel-preview');
+  const tbl=document.getElementById('rel-preview-tbl');
+  if(!persons.length){alert('Nenhum colaborador com os filtros selecionados.');return}
+  const MAX_T=20;const t2=trainings.slice(0,MAX_T);
+  const more=trainings.length>MAX_T?` + ${trainings.length-MAX_T} mais…`:'';
+  let html=`<p class="tsm" style="margin-bottom:8px">${persons.length} colaboradores · ${trainings.length} treinamentos${more?` (mostrando ${MAX_T})`:''}</p>`;
+  
+  html+=`<table><thead><tr><th style="min-width:160px">Nome</th><th>CPF</th><th>Cargo</th><th>Situação</th><th>CC</th>${t2.map(t=>`<th style="min-width:90px;white-space:normal;font-size:9px" title="${esc(t)}">${esc(tr(t,18))}</th>`).join('')}</tr></thead><tbody>`;
+  
+  html+=persons.slice(0,30).map(p=>`<tr><td>${esc(p.nome)}</td><td><small>${esc(p.cpf)}</small></td><td>${esc(tr(p.cargo,26))}</td><td>${bSt(p.situacao.toLowerCase())}</td><td>${esc(p.cc)}</td>${t2.map(t=>{
+      
+      // SUBSTITUIÇÃO: Match Estrito (Cruza perfeitamente os dados em colunas despivotadas sem inventar matches)
+      let ft = p.trainings[norm(t)];
+      if (!ft) {
+          // Fallback seguro sem fuzzy matching agressivo
+          const tnC = cleanTN(t);
+          ft = Object.values(p.trainings).find(x => cleanTN(x.nome) === tnC || (norm(x.nome).length >= 6 && norm(t).length >= 6 && (norm(x.nome).includes(norm(t)) || norm(t).includes(norm(x.nome)))));
+      }
+
+      const st = ft ? aSt(ft.vencimento, ft.dataReal) : '—';
+      const bg = st==='ok'?'#e6f9ee':st==='vencido'?'#ffebee':st.startsWith('p')?'#fff8e1':'#f9f9f9';
+      const txt = ft ? (ft.dataReal ? fDate(ft.dataReal) : (ft.vencimento ? 'Vcto: ' + fDate(ft.vencimento) : '—')) : '—';
+      
+      return `<td style="font-size:10.5px;background:${bg};white-space:nowrap">${txt}</td>`
+      
+  }).join('')}</tr>`).join('');
+  
+  if(persons.length>30)html+=`<tr><td colspan="${5+t2.length}" style="text-align:center;padding:8px;font-size:11px;color:var(--mu)">… e mais ${persons.length-30} colaboradores</td></tr>`;
+  html+=`</tbody></table>`;
+  tbl.innerHTML=html;
+  el.style.display='';
+  document.getElementById('rel-status').textContent=`${persons.length} colaboradores, ${trainings.length} treinamentos`;
+}
+
+function gerarRelatorio() {
+    if (!window.XLSX) { alert('Biblioteca XLSX não carregada.'); return; }
+    const { persons, trainings } = _getRelData();
+    if (!persons.length) { alert('Nenhum colaborador com os filtros selecionados.'); return; }
+
+    const status = document.getElementById('rel-status');
+    status.textContent = '⏳ Gerando planilha, aguarde alguns minutos...';
+
+    setTimeout(() => {
+        try {
+            const wb = XLSX.utils.book_new();
+            const dataMatrix = [];
+
+            // LINHA 1: Instrução e espaço para a Macro
+            dataMatrix.push(["► Ocultar colunas vazias | ◄ Reexibir todas (Cole a macro fornecida no app no Editor VBA)", "", "", "", ""]);
+
+            // LINHA 2: Cabeçalhos
+            const headers = ['Nome', 'CPF', 'Cargo', 'Situação', 'CC', ...trainings];
+            dataMatrix.push(headers);
+
+            // LINHA 3 em diante: Dados
+            persons.forEach(p => {
+                const row = [
+                    p.nome || '',
+                    p.cpf || '',
+                    p.cargo || '',
+                    p.situacao || '',
+                    p.cc || ''
+                ];
+
+                // Preenche as colunas de treinamentos
+                trainings.forEach(t => {
+                    
+                    // SUBSTITUIÇÃO: Match Estrito no Gerador de Relatório
+                    let found = p.trainings[norm(t)];
+                    if (!found) {
+                        const tnC = cleanTN(t);
+                        found = Object.values(p.trainings).find(x => cleanTN(x.nome) === tnC || (norm(x.nome).length >= 6 && norm(t).length >= 6 && (norm(x.nome).includes(norm(t)) || norm(t).includes(norm(x.nome)))));
+                    }
+
+                    if (found && (found.dataReal || found.vencimento)) {
+                        const d = found.dataReal ? fDate(found.dataReal) : '';
+                        const v = found.vencimento ? (d ? ' / Vcto: ' : 'Vcto: ') + fDate(found.vencimento) : '';
+                        row.push(d + v);
+                    } else {
+                        row.push(""); // Célula vazia para a macro ocultar
+                    }
+                    
+                });
+                dataMatrix.push(row);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(dataMatrix);
+
+            // Congela as 2 primeiras linhas e as 5 primeiras colunas (Nome até CC)
+            ws['!freeze'] = { xSplit: 5, ySplit: 2, topLeftCell: 'F3', activeCell: 'F3' };
+
+            // Ajusta larguras das colunas
+            ws['!cols'] = [{ wch: 35 }, { wch: 15 }, { wch: 25 }, { wch: 15 }, { wch: 12 }, ...trainings.map(() => ({ wch: 20 }))];
+
+            XLSX.utils.book_append_sheet(wb, ws, "Treinamentos");
+
+            // Gera o download do arquivo de forma nativa
+            const fname = `Relatorio_Auditoria_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            XLSX.writeFile(wb, fname);
+
+            status.textContent = '✅ Relatório gerado com sucesso!';
+        } catch (e) {
+            console.error(e);
+            status.textContent = '❌ Erro ao gerar Excel.';
+            alert('Erro: ' + e.message);
+        }
+    }, 100);
+}
+
+initMsels();
+initSortHeaders();
+navigate('import');
+
+// Garante que a função exista, independente de como for chamada
+// Garante que a função exista e ignora acentos/maiúsculas
+function sheetByName(wb, name1, name2) {
+    if (!wb || !wb.SheetNames) return null;
+    const n1 = norm(name1);
+    const n2 = norm(name2);
+    return wb.SheetNames.find(n => norm(n) === n1 || norm(n) === n2);
+}
+
+const sheetbyname = sheetByName;
+
+</script>
+</body>
+</html>
