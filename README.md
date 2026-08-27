@@ -99,8 +99,6 @@ Entre os recursos identificados no GTS estão:
 - geração e download de planilhas Excel;
 - regras de correspondência aproximada entre nomes de treinamentos.
 
-> Depois de criar a branch do GTS, substitua `LINK_DA_BRANCH_GTS` abaixo pelo endereço definitivo:
->
 > **Projeto completo:** [Acessar a branch do GTS](LINK_DA_BRANCH_GTS)
 
 ## Arquitetura
