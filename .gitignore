@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv*/
+build/
+dist/
+*.spec
+*.xlsx
+*.xls
+*.csv
+*.pdf
+*.png
+*.jpg
+*.tif
+*.tiff
+entrada/
+saida/
+tesseract/

@@ -1,0 +1,7 @@
+{
+  "name": "registro_profissional",
+  "mode": "regex",
+  "pattern": "(?:REGISTRO|CREA)\\s*[: -]?\\s*([A-Z0-9./-]{5,30})",
+  "group": 1,
+  "pages": 4
+}
