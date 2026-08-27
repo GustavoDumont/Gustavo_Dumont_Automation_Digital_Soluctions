@@ -77,14 +77,14 @@ Por segurança, o método de navegação precisa ser configurado internamente. A
 ## Estrutura
 
 ```text
-src/app.py
-src/automation.py
-src/storage.py
-src/models.py
-docs/OPERACAO_DE_BACKUP.md
-docs/ARQUITETURA.md
-docs/RUNBOOK.md
-legacy/README.md
+app.py
+automation.py
+storage.py
+models.py
+OPERACAO_DE_BACKUP.md
+ARQUITETURA.md
+RUNBOOK.md
+README_before_exe.md
 SECURITY.md
 CHANGELOG.md
 ```
