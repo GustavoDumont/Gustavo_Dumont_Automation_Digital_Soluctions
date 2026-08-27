@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv*/
+build/
+dist/
+*.spec
+.env
+*.log
+resultado_asos_*.csv
+Downloads/
+chrome-portable/
+*.exe
