@@ -88,7 +88,7 @@ O executável não inclui credenciais, CPFs ou documentos.
 
 ## Configuração do portal
 
-A automação foi mantida com os seletores conhecidos do protótipo. Portais podem mudar IDs, textos e navegação. Antes do uso, um responsável técnico deve revisar os seletores em `src/buscador_aso.py`.
+A automação foi mantida com os seletores conhecidos do protótipo. Portais podem mudar IDs, textos e navegação. Antes do uso, um responsável técnico deve revisar os seletores em `buscador_aso.py`.
 
 A versão pública não contorna CAPTCHA, autenticação multifator, bloqueios ou controles anti-automação. Esses mecanismos devem ser respeitados.
 
