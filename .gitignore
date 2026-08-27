@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Segredos e configuracao local
+.env
+.env.*
+!.env.example
+
+# IDE e sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Build e distribuicao
+build/
+dist/
+*.spec
+*.exe
+
+# Navegador e drivers locais
+chrome/
+chromedriver*
+
+# Documentos fiscais e dados operacionais
+*.pdf
+*.xml
+*.xlsx
+*.xls
+*.csv
+
+# Logs
+*.log
+logs/
