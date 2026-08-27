@@ -1,0 +1,1916 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Gestão de Férias — Concremat INDMINER</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --navy:#173557;--blue:#004994;--mid:#0078C0;--light:#5BA0D1;--sky:#00B0E8;
+  --orange:#F18700;--green:#7AC142;--gray:#575757;--red:#d93025;
+  --bg:#eef1f5;--surface:#fff;--border:#dde3ea;--text:#1a2332;--text2:#4a5568;--text3:#8a9bb0;
+  --sidebar:230px;
+  /* urgency palette */
+  --ufin-c:#575757;--ufin-bg:#f5f5f5;
+  --ufer-c:#004994;--ufer-bg:#e5f3fc;
+  --ult60-c:#d93025;--ult60-bg:#fde8e8;
+  --ucrit-c:#F18700;--ucrit-bg:#fef3e2;
+  --uaten-c:#b86a00;--uaten-bg:#fffbeb;
+  --ulemb-c:#0078C0;--ulemb-bg:#e8f4fd;
+  --uok-c:#2e7d0e;--uok-bg:#edf7e3;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:Arial,sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.5}
+/* ── UPLOAD ── */
+#uploadScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,var(--navy) 0%,#0d2340 55%,#0a1820 100%);overflow:hidden;position:relative}
+#uploadScreen::before{content:'';position:absolute;top:-15%;right:-8%;width:55%;height:120%;background:linear-gradient(135deg,rgba(0,120,192,.13) 0%,transparent 55%);transform:skewX(-13deg)}
+#uploadScreen::after{content:'';position:absolute;bottom:-10%;left:-5%;width:45%;height:90%;background:linear-gradient(135deg,rgba(241,135,0,.05) 0%,transparent 55%);transform:skewX(-13deg)}
+.up-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:38px 44px;width:560px;backdrop-filter:blur(18px);position:relative;z-index:2}
+.up-logo{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.up-logo img{height:38px;filter:brightness(10)}
+.up-brand{font-size:11px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.07em;margin-top:2px}
+.up-accent{width:30px;height:2px;background:var(--orange);margin-bottom:18px}
+.up-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:5px}
+.up-desc{font-size:11.5px;color:rgba(255,255,255,.48);margin-bottom:20px;line-height:1.7}
+.up-zone{border:1.5px dashed rgba(255,255,255,.18);border-radius:8px;padding:14px 16px;margin-bottom:9px;cursor:pointer;transition:all .2s;background:rgba(255,255,255,.03);display:flex;align-items:center;gap:12px}
+.up-zone:hover{border-color:var(--sky);background:rgba(0,176,232,.06)}
+.up-zone.loaded{border-color:var(--green);background:rgba(122,193,66,.06)}
+.uz-icon{font-size:20px;flex-shrink:0}
+.uz-label{font-size:12px;font-weight:600;color:rgba(255,255,255,.8)}
+.uz-sub{font-size:10px;color:rgba(255,255,255,.32);margin-top:1px}
+.uz-file{font-size:10px;color:var(--green);margin-top:2px}
+input[type=file]{display:none}
+.up-multi{display:flex;align-items:center;gap:8px;margin:14px 0 4px}
+.btn-multi{padding:8px 16px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.07);color:rgba(255,255,255,.8);font-family:Arial,sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
+.btn-multi:hover{border-color:var(--sky);background:rgba(0,176,232,.1);color:#fff}
+.up-multi-hint{font-size:10.5px;color:rgba(255,255,255,.3)}
+.btn-start{width:100%;padding:13px;border-radius:7px;border:none;background:var(--orange);color:#fff;font-family:Arial,sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:16px;transition:background .15s}
+.btn-start:hover{background:#d97700}
+.btn-start:disabled{background:rgba(255,255,255,.15);cursor:not-allowed;color:rgba(255,255,255,.35)}
+.up-footer{margin-top:18px;text-align:center;font-size:9.5px;color:rgba(255,255,255,.18)}
+/* ── APP LAYOUT ── */
+#app{display:none;height:100vh;grid-template-columns:var(--sidebar) 1fr}
+#app.visible{display:grid}
+/* ── SIDEBAR ── */
+#sidebar{background:var(--navy);display:flex;flex-direction:column;height:100vh;overflow:hidden;position:relative}
+#sidebar::after{content:'';position:absolute;bottom:0;right:0;width:55%;height:28%;background:linear-gradient(135deg,rgba(241,135,0,.04) 0%,transparent 60%);transform:skewX(-15deg);pointer-events:none}
+.sb-brand{padding:16px 16px 12px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:12px}
+.sb-logo{height:32px;filter:brightness(10);flex-shrink:0}
+.sb-texts{flex:1}
+.sb-name{font-size:13px;font-weight:700;color:#fff;letter-spacing:-.01em}
+.sb-sub{font-size:9px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.07em}
+.sb-accent{width:24px;height:2px;background:var(--orange);margin:6px 0 2px}
+.sb-mod{font-size:10.5px;font-weight:700;color:rgba(255,255,255,.75);background:rgba(0,120,192,.2);border-left:3px solid var(--sky);padding:3px 9px;border-radius:0 3px 3px 0;margin-top:5px}
+.sb-nav{flex:1;padding:8px 10px;overflow-y:auto}
+.sb-gl{font-size:9px;font-weight:700;color:rgba(255,255,255,.26);text-transform:uppercase;letter-spacing:.1em;padding:10px 8px 3px}
+.sb-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;cursor:pointer;color:rgba(255,255,255,.6);transition:all .12s;margin-bottom:1px;font-size:12.5px;position:relative;user-select:none}
+.sb-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.sb-item.active{background:var(--blue);color:#fff;font-weight:600}
+.sb-item.active::before{content:'';position:absolute;left:0;top:7px;bottom:7px;width:3px;background:var(--orange);border-radius:0 2px 2px 0}
+.sb-icon{font-size:14px;width:17px;text-align:center;flex-shrink:0}
+.sb-badge{margin-left:auto;font-size:9.5px;font-weight:700;border-radius:10px;padding:1px 6px;font-family:'Courier New',monospace}
+.sb-badge.red{background:rgba(209,48,37,.2);color:#ff6b6b;border:1px solid rgba(209,48,37,.3)}
+.sb-badge.info{background:rgba(0,176,232,.14);color:var(--sky);border:1px solid rgba(0,176,232,.25)}
+.sb-badge.warn{background:rgba(241,135,0,.14);color:var(--orange);border:1px solid rgba(241,135,0,.25)}
+.sb-footer{padding:10px 12px;border-top:1px solid rgba(255,255,255,.07);position:relative;z-index:2}
+.sb-user{display:flex;align-items:center;gap:8px}
+.sb-avatar{width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.sb-uname{font-size:11px;font-weight:600;color:rgba(255,255,255,.78)}
+.sb-urole{font-size:9.5px;color:rgba(255,255,255,.3)}
+.sb-dev{font-size:9px;color:rgba(255,255,255,.15);margin-top:6px;text-align:center}
+/* ── MAIN ── */
+#main{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+#topbar{height:50px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:0 18px;flex-shrink:0}
+.tb-title{font-size:14px;font-weight:700;color:var(--navy)}
+.tb-sub{font-size:11px;color:var(--text3);margin-left:2px}
+.tb-sp{flex:1}
+.tb-search{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 10px;min-width:210px}
+.tb-search input{border:none;background:transparent;outline:none;font-family:Arial,sans-serif;font-size:12px;color:var(--text);width:100%}
+.tb-btn{height:29px;padding:0 12px;border-radius:5px;border:1px solid var(--border);background:var(--bg);color:var(--text2);font-family:Arial,sans-serif;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .12s;white-space:nowrap}
+.tb-btn:hover{border-color:var(--mid);color:var(--navy)}
+.tb-btn.primary{background:var(--orange);border-color:var(--orange);color:#fff}
+.tb-btn.primary:hover{background:#d97700}
+.tb-btn.blue{background:var(--blue);border-color:var(--blue);color:#fff}
+.tb-btn.blue:hover{background:var(--navy)}
+/* ── PAGES ── */
+.page{display:none;flex:1;overflow-y:auto;padding:16px 18px}
+.page.active{display:block}
+.page::-webkit-scrollbar{width:5px}
+.page::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+/* ── CARD ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px}
+.card-header{padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.card-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em}
+.card-actions{margin-left:auto;display:flex;gap:5px;align-items:center}
+.card-btn{font-size:11px;color:var(--mid);cursor:pointer;padding:3px 7px;border-radius:4px;border:1px solid transparent;transition:all .12s;background:none;font-family:Arial,sans-serif}
+.card-btn:hover{background:rgba(0,120,192,.07);border-color:rgba(0,120,192,.16)}
+/* ── KPI ── */
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:box-shadow .15s;position:relative;overflow:hidden}
+.kpi:hover{box-shadow:0 2px 10px rgba(0,0,0,.07)}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi-n{font-size:28px;font-weight:700;line-height:1;margin-bottom:3px;font-family:'Courier New',monospace}
+.kpi-label{font-size:11px;color:var(--text2);line-height:1.3}
+.kpi-trend{font-size:9.5px;color:var(--text3);margin-top:4px}
+/* ── GRIDS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g23{display:grid;grid-template-columns:1.65fr 1fr;gap:12px}
+/* ── ALERT BANNER ── */
+.ab{background:#fff5f4;border:1px solid #fad0cc;border-left:4px solid var(--red);border-radius:7px;padding:9px 14px;display:flex;align-items:center;gap:11px;margin-bottom:12px;cursor:pointer;transition:box-shadow .15s}
+.ab:hover{box-shadow:0 2px 8px rgba(209,48,37,.1)}
+.ab-title{font-size:13px;font-weight:700;color:var(--red)}
+.ab-sub{font-size:11px;color:var(--text2);margin-top:1px}
+.ab-act{font-size:11.5px;color:var(--red);font-weight:700;white-space:nowrap;flex-shrink:0}
+/* ── CONTRACT MULTISELECT ── */
+.cb-wrap{display:flex;align-items:flex-start;gap:7px;padding:8px 12px;border-bottom:1px solid var(--border);flex-wrap:wrap;background:#fafbfc}
+.cb-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;align-self:center}
+.contract-chip{padding:4px 10px;border-radius:4px;font-size:11px;font-weight:600;border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:all .12s;white-space:nowrap;color:var(--text2);user-select:none}
+.contract-chip:hover{border-color:var(--mid);color:var(--navy)}
+.contract-chip.sel{background:var(--navy);border-color:var(--navy);color:#fff}
+.contract-chip.all-chip.sel{background:var(--mid);border-color:var(--mid)}
+/* ── TABLE ── */
+.tbl-wrap{overflow-y:auto}
+.tbl-wrap::-webkit-scrollbar{width:4px;height:4px}
+.tbl-wrap::-webkit-scrollbar-thumb{background:var(--border)}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:7px 10px;text-align:left;border-bottom:2px solid var(--border);background:#fafbfc;position:sticky;top:0;z-index:3;white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{color:var(--navy)}
+thead th.sa::after{content:' ↑';color:var(--mid)}
+thead th.sd::after{content:' ↓';color:var(--mid)}
+tbody td{padding:7px 10px;border-bottom:1px solid #f2f4f7;font-size:12px;vertical-align:middle}
+tbody tr:hover td{background:#f7f9fc}
+tbody tr.clk{cursor:pointer}
+.td-m{font-family:'Courier New',monospace;font-size:11px}
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;padding:2px 6px;border-radius:3px;font-size:10px;font-weight:700;white-space:nowrap}
+.badge.red{background:#fde8e8;color:var(--red)}
+.badge.orange{background:#fef3e2;color:#b85f00}
+.badge.green{background:#edf7e3;color:#2e7d0e}
+.badge.blue{background:#e5f3fc;color:var(--blue)}
+.badge.gray{background:#f0f2f5;color:var(--gray)}
+/* ── FILTER ROW ── */
+.fr{display:flex;align-items:center;gap:6px;padding:8px 11px;border-bottom:1px solid var(--border);flex-wrap:wrap;background:var(--surface)}
+.chip{padding:4px 10px;border-radius:4px;font-size:11px;font-weight:600;border:1px solid var(--border);background:var(--bg);cursor:pointer;transition:all .12s;white-space:nowrap;color:var(--text2);user-select:none}
+.chip:hover{border-color:var(--mid);color:var(--navy)}
+.chip.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.fr-sep{width:1px;height:18px;background:var(--border);margin:0 2px;align-self:center;flex-shrink:0}
+.fr-search{display:flex;align-items:center;gap:5px;border:1px solid var(--border);border-radius:5px;padding:4px 8px;background:var(--bg)}
+.fr-search input{border:none;background:transparent;outline:none;font-family:Arial,sans-serif;font-size:12px;color:var(--text);width:160px}
+.fr-right{margin-left:auto;display:flex;gap:6px}
+.dash-filter-grid{display:grid;grid-template-columns:1.1fr 1fr 1fr .8fr .8fr auto;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);align-items:center;background:#fafbfc}
+.dash-input,.dash-select{height:30px;border:1px solid var(--border);border-radius:5px;background:var(--surface);padding:0 10px;font-family:Arial,sans-serif;font-size:12px;color:var(--text);outline:none;min-width:0}
+.dash-input:focus,.dash-select:focus{border-color:var(--mid);box-shadow:0 0 0 2px rgba(0,120,192,.08)}
+.dash-hint{font-size:10.5px;color:var(--text3);padding:0 12px 10px;background:#fafbfc}
+.dash-matrix-note{font-size:10.5px;color:var(--text3)}
+/* ── URGENCY CHIP HELPERS ── */
+.uch-fin{border-color:rgba(87,87,87,.35)!important;color:var(--ufin-c)!important;background:var(--ufin-bg)!important}
+.uch-fin.active{background:var(--ufin-c)!important;color:#fff!important}
+.uch-fer{border-color:rgba(0,73,148,.35)!important;color:var(--ufer-c)!important;background:var(--ufer-bg)!important}
+.uch-fer.active{background:var(--ufer-c)!important;color:#fff!important}
+.uch-lt60{border-color:rgba(217,48,37,.35)!important;color:var(--ult60-c)!important;background:var(--ult60-bg)!important}
+.uch-lt60.active{background:var(--ult60-c)!important;color:#fff!important}
+.uch-crit{border-color:rgba(241,135,0,.35)!important;color:var(--ucrit-c)!important;background:var(--ucrit-bg)!important}
+.uch-crit.active{background:var(--ucrit-c)!important;color:#fff!important}
+.uch-aten{border-color:rgba(184,106,0,.35)!important;color:var(--uaten-c)!important;background:var(--uaten-bg)!important}
+.uch-aten.active{background:var(--uaten-c)!important;color:#fff!important}
+.uch-lemb{border-color:rgba(0,120,192,.35)!important;color:var(--ulemb-c)!important;background:var(--ulemb-bg)!important}
+.uch-lemb.active{background:var(--ulemb-c)!important;color:#fff!important}
+.uch-ok{border-color:rgba(46,125,14,.35)!important;color:var(--uok-c)!important;background:var(--uok-bg)!important}
+.uch-ok.active{background:var(--uok-c)!important;color:#fff!important}
+/* ── PROGRESS ── */
+.pr{padding:8px 14px;border-bottom:1px solid #f2f4f7}
+.pr:last-child{border-bottom:none}
+.pr-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.pr-label{font-size:12px;font-weight:500}
+.pr-count{font-size:11px;color:var(--text3);font-family:'Courier New',monospace}
+.pr-track{height:5px;background:#eef0f3;border-radius:3px;overflow:hidden}
+.pr-fill{height:100%;border-radius:3px;transition:width .5s ease}
+.stat-mini{padding:7px 14px;border-bottom:1px solid #f5f6f8;display:flex;align-items:center;justify-content:space-between}
+.stat-mini:last-child{border-bottom:none}
+/* ── DETAIL HERO ── */
+.dh{background:var(--navy);padding:20px 20px 16px;display:flex;align-items:flex-start;gap:13px;position:relative;overflow:hidden}
+.dh::after{content:'';position:absolute;right:-5%;top:-20%;width:38%;height:140%;background:linear-gradient(135deg,rgba(0,120,192,.17) 0%,transparent 55%);transform:skewX(-10deg)}
+.dh-av{width:48px;height:48px;border-radius:10px;border:2px solid rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;color:#fff;position:relative;z-index:1}
+.dh-info{flex:1;position:relative;z-index:1}
+.dh-name{font-size:18px;font-weight:700;color:#fff;letter-spacing:-.02em;margin-bottom:2px}
+.dh-sub{font-size:11px;color:rgba(255,255,255,.48);font-family:'Courier New',monospace}
+.dh-lot{font-size:11px;color:rgba(255,255,255,.65);margin-top:3px}
+.dh-badges{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+.dh-badge{padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700}
+.dh-badge.ok{background:rgba(122,193,66,.18);color:#a8e070;border:1px solid rgba(122,193,66,.28)}
+.dh-badge.red{background:rgba(209,48,37,.18);color:#ff9090;border:1px solid rgba(209,48,37,.28)}
+.dh-badge.orange{background:rgba(241,135,0,.18);color:#ffc060;border:1px solid rgba(241,135,0,.28)}
+.dh-badge.blue{background:rgba(0,176,232,.18);color:#80dfff;border:1px solid rgba(0,176,232,.28)}
+.dh-badge.gray{background:rgba(87,87,87,.2);color:#c0c4cc;border:1px solid rgba(87,87,87,.3)}
+.dh-acts{display:flex;gap:7px;flex-wrap:wrap;flex-shrink:0;align-self:center;position:relative;z-index:1}
+.info-grid{display:grid;grid-template-columns:repeat(4,1fr)}
+.ic{padding:10px 14px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+.ic:nth-child(4n){border-right:none}
+.ic.s2{grid-column:span 2}.ic.s4{grid-column:span 4}
+.ic.warn{background:#fff5f4}
+.ic-lbl{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:3px}
+.ic-val{font-size:13px;font-weight:600}
+.ic-val.big{font-size:22px;font-family:'Courier New',monospace}
+.ic-val.red{color:var(--red)}.ic-val.grn{color:#2e7d0e}.ic-val.mono{font-family:'Courier New',monospace;font-size:12px}
+.ic-hint{font-size:10px;color:var(--text3);margin-top:2px}
+.ic-hint.red{color:var(--red)}
+/* ── TIMELINE ── */
+.tl{padding:10px 14px}
+.tl-item{display:flex;gap:9px;padding-bottom:12px;position:relative}
+.tl-item:not(:last-child)::before{content:'';position:absolute;left:9px;top:20px;bottom:0;width:1px;background:var(--border)}
+.tl-dot{width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9.5px;flex-shrink:0}
+.tl-dot.g{background:#edf7e3;color:#2e7d0e}.tl-dot.r{background:#fde8e8;color:var(--red)}
+.tl-dot.b{background:#e5f3fc;color:var(--blue)}.tl-dot.o{background:#fef3e2;color:#b85f00}
+.tl-dot.gr{background:#f0f2f5;color:var(--gray)}
+.tl-label{font-size:12px;font-weight:600;margin-top:1px}
+.tl-meta{font-size:11px;color:var(--text3);margin-top:1px}
+.tl-src{font-size:9.5px;color:var(--text3);font-style:italic;margin-top:1px;display:inline-block;background:#f5f6f8;padding:1px 5px;border-radius:3px}
+/* ── RULE CARD ── */
+.rule-card{background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:12px 14px;margin-bottom:9px}
+.rc-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.rc-name{font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px}
+.rc-desc{font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:6px}
+.rc-chs{display:flex;gap:5px;flex-wrap:wrap}
+.ch-tag{font-size:10px;padding:2px 7px;border-radius:3px;border:1px solid var(--border);color:var(--text3)}
+.ch-tag.on{border-color:#b3d5f5;color:var(--blue);background:#e5f3fc}
+.toggle{width:35px;height:19px;border-radius:10px;position:relative;cursor:pointer;transition:background .18s;border:none;flex-shrink:0}
+.toggle.on{background:var(--mid)}.toggle.off{background:#cdd4dc}
+.toggle::after{content:'';position:absolute;width:13px;height:13px;border-radius:50%;background:#fff;top:3px;transition:left .18s;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.toggle.on::after{left:19px}.toggle.off::after{left:3px}
+/* ── TPL BOX ── */
+.tpl{background:#f8f9fb;border:1px solid var(--border);border-radius:5px;padding:9px 11px;font-size:11px;color:var(--text2);font-family:'Courier New',monospace;line-height:1.8;margin-bottom:8px}
+.tpl-var{color:var(--blue);font-weight:700}
+.tpl-section{font-size:10px;font-weight:700;text-transform:uppercase;color:var(--text3);letter-spacing:.07em;margin:10px 0 5px}
+/* ── GESTOR ROW ── */
+.g-row{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.g-row:last-child{border-bottom:none}
+.g-av{width:30px;height:30px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+/* ── EMAIL TABLE (modal) ── */
+.em-section{margin:12px 16px 0}
+.em-sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:6px 10px;border-radius:5px 5px 0 0;margin-bottom:0}
+.em-sec-title.red{background:var(--ult60-bg);color:var(--ult60-c)}
+.em-sec-title.fin{background:#f0f2f5;color:var(--gray)}
+.em-sec-title.t15{background:#fde8e8;color:var(--red)}
+.em-sec-title.t30{background:#fef3e2;color:#b85f00}
+.em-sec-title.t45{background:#fffbeb;color:#8a5c00}
+.em-tbl{width:100%;border-collapse:collapse;border:1px solid var(--border);border-top:none;margin-bottom:12px}
+.em-tbl th{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;padding:6px 8px;text-align:left;background:#fafbfc;border-bottom:1px solid var(--border)}
+.em-tbl td{padding:6px 8px;border-bottom:1px solid #f2f4f7;font-size:11.5px}
+.em-tbl tr:last-child td{border-bottom:none}
+/* ── MODAL ── */
+#overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center}
+.modal{background:#fff;border-radius:10px;width:680px;max-height:84vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.28)}
+.modal-h{padding:13px 17px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:14px;font-weight:700}
+.modal-close{border:none;background:none;font-size:18px;cursor:pointer;color:var(--text3);padding:0 4px}
+.modal-body{flex:1;overflow-y:auto}
+.modal-foot{padding:10px 15px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+/* ── OL BLOCK ── */
+.ol-block{padding:12px 15px;border-bottom:1px solid var(--border)}
+.ol-fl{font-size:9.5px;font-weight:700;text-transform:uppercase;color:var(--text3);letter-spacing:.06em;margin:6px 0 2px}
+.ol-fv{font-size:12px;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:6px 10px;max-height:100px;overflow-y:auto}
+.ol-fv.body-field{font-size:11px;font-family:'Courier New',monospace;max-height:150px;white-space:pre-wrap}
+.ol-warn{background:#fff8e6;border:1px solid #f5d78e;border-radius:6px;padding:9px 13px;font-size:11.5px;color:#7a4f00;margin:12px 15px 0}
+/* ── TOAST ── */
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--navy);color:#fff;padding:8px 17px;border-radius:6px;font-size:12px;font-weight:600;z-index:9999;opacity:0;transition:all .25s cubic-bezier(.34,1.56,.64,1);pointer-events:none;box-shadow:0 4px 18px rgba(0,0,0,.22);white-space:nowrap}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+/* ── MISC ── */
+.empty{text-align:center;padding:34px 16px;color:var(--text3);font-size:12px}
+.tbl-foot{padding:6px 12px;font-size:11px;color:var(--text3);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface)}
+.pg-btns{display:flex;gap:3px}
+.pg-btn{padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg);cursor:pointer;font-size:11px}
+.pg-btn:hover{border-color:var(--mid);color:var(--mid)}
+.pg-btn.active{background:var(--navy);border-color:var(--navy);color:#fff}
+
+/* Atualização do grid de filtros para acomodar o campo Área */
+.dash-filter-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1fr 1fr 0.8fr 0.8fr auto; /* Adicionado mais 1fr */
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  background: #fafbfc;
+}
+
+/* Indicadores de Conflito/Sobreposição */
+.overlap-row {
+  background-color: #fff5f4 !important;
+}
+.badge-conflito {
+  background: #fde8e8;
+  color: var(--red);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  border: 1px solid #fad0cc;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+/* ── GANTT ── */
+.gantt-wrap{overflow:hidden}
+.gantt-table{width:100%;border-collapse:collapse;font-size:11px}
+.gantt-table thead th{background:#f2f4f7;border-bottom:2px solid var(--border);padding:7px 8px;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);white-space:nowrap;position:sticky;top:0;z-index:4}
+.gantt-table tbody td{border-bottom:1px solid #f2f4f7;padding:4px 8px;vertical-align:middle}
+.gantt-table tbody tr:hover td{background:#f7f9fc;cursor:pointer}
+.gantt-col-info{min-width:170px;max-width:210px}
+.gantt-dates-col{white-space:nowrap;font-family:'Courier New',monospace;font-size:10px;color:var(--text3);min-width:135px}
+.gantt-days-col{text-align:center;min-width:45px}
+.gantt-timeline-cell{min-width:520px;padding:3px 8px;width:100%}
+.gantt-track{height:26px;position:relative;background:#f2f4f7;border-radius:4px;overflow:visible}
+.gantt-bar{position:absolute;top:3px;bottom:3px;border-radius:3px;opacity:.88;display:flex;align-items:center;overflow:hidden;cursor:pointer;transition:opacity .15s,box-shadow .15s;min-width:5px}
+.gantt-bar:hover{opacity:1;z-index:2;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.gantt-bar-txt{font-size:9.5px;font-weight:700;color:#fff;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px rgba(0,0,0,.3)}
+.gantt-month-hdr{position:absolute;top:0;bottom:0;border-left:1px dashed rgba(0,0,0,.09);display:flex;align-items:center;justify-content:center;pointer-events:none;overflow:hidden}
+.gantt-month-hdr-top{position:absolute;top:0;bottom:0;border-left:1px solid rgba(0,73,148,.18);display:flex;align-items:center;justify-content:center;pointer-events:none;overflow:hidden;background:transparent}
+.gantt-month-lbl{font-size:8px;color:var(--text3);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 2px;text-align:center;font-weight:600}
+.gantt-month-lbl-top{font-size:9px;color:var(--navy);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 3px;text-align:center;font-weight:700}
+.gantt-today-mk{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--red);opacity:.75;z-index:5;pointer-events:none}
+.gantt-today-mk::before{content:'▼';position:absolute;top:-2px;left:-5px;font-size:9px;color:var(--red);opacity:.95}
+.gantt-today-lbl{position:absolute;top:-6px;left:4px;font-size:7.5px;color:var(--red);font-weight:700;white-space:nowrap;pointer-events:none}
+.gantt-month-bg{position:absolute;top:0;bottom:0;background:rgba(0,73,148,.025);pointer-events:none}
+.gantt-now-month{position:absolute;top:0;bottom:0;background:rgba(255,235,59,.12);pointer-events:none;border-left:2px solid rgba(241,135,0,.3);border-right:2px solid rgba(241,135,0,.3)}
+</style>
+</head>
+<body>
+
+<!-- ═══ UPLOAD SCREEN ═══ -->
+<div id="uploadScreen">
+  <div class="up-card">
+    <div class="up-logo">
+      <img src="data:image/jpeg;base64,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" class="sb-logo" alt="Concremat">
+      <div><div style="font-size:15px;font-weight:700;color:#fff">CONCREMAT</div><div class="up-brand">ind&amp;miner · depto. pessoal</div></div>
+    </div>
+    <div class="up-accent"></div>
+    <div class="up-title">Gestão de Férias — Ind&amp;Miner</div>
+    <div class="up-desc">Carregue os arquivos de dados. A planilha de Férias é obrigatória. Use "Selecionar múltiplos" para carregar todos de uma vez — o app identifica automaticamente.</div>
+
+    <div class="up-multi">
+      <button class="btn-multi" onclick="document.getElementById('inAll').click()">📂 Selecionar múltiplos arquivos de uma vez</button>
+      <span class="up-multi-hint">ou clique em cada zona abaixo</span>
+    </div>
+    <input type="file" id="inAll" multiple accept=".xlsx,.xls">
+
+    <label for="inFerias"><div class="up-zone" id="zF"><div class="uz-icon">📋</div><div><div class="uz-label">Planilha de Férias (obrigatório)</div><div class="uz-sub">LISTAGEM FERIAS_CONSTRUÇÃO.XLS</div><div class="uz-file" id="lbF">Clique para selecionar</div></div></div></label>
+    <input type="file" id="inFerias" accept=".xlsx,.xls">
+
+    <label for="inEfetivo"><div class="up-zone" id="zE"><div class="uz-icon">👥</div><div><div class="uz-label">Efetivo Consolidado (recomendado)</div><div class="uz-sub">Efetivo_Consolidado.xlsx — Aba: Efetivo</div><div class="uz-file" id="lbE">Clique para selecionar</div></div></div></label>
+    <input type="file" id="inEfetivo" accept=".xlsx,.xls">
+
+    <label for="inHist"><div class="up-zone" id="zH"><div class="uz-icon">📜</div><div><div class="uz-label">Histórico de Férias (opcional)</div><div class="uz-sub">HISTORICO_DE_FERIAS.xlsx — enriquece ficha individual</div><div class="uz-file" id="lbH">Clique para selecionar</div></div></div></label>
+    <input type="file" id="inHist" accept=".xlsx,.xls">
+
+    <button class="btn-start" id="btnStart" disabled onclick="APP.iniciar()">Carregar Dados e Abrir App</button>
+    <div class="up-footer">Desenvolvido por Gustavo Dumont @gustavofgdumont</div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+  <aside id="sidebar">
+    <div class="sb-brand">
+      <img src="data:image/jpeg;base64,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" class="sb-logo" alt="logo">
+      <div class="sb-texts">
+        <div class="sb-name">CONCREMAT</div>
+        <div class="sb-sub">ind&amp;miner</div>
+        <div class="sb-accent"></div>
+        <div class="sb-mod">Gestão de Férias</div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-gl">Visão Geral</div>
+      <div class="sb-item active" id="nav-dashboard" onclick="APP.go('dashboard',this)"><span class="sb-icon">⬛</span> Dashboard</div>
+      <div class="sb-gl">Férias</div>
+      <div class="sb-item" id="nav-avencer" onclick="APP.go('avencer',this)"><span class="sb-icon">⚠</span> Férias a Vencer <span class="sb-badge red" id="badge-av">0</span></div>
+      <div class="sb-item" id="nav-prog" onclick="APP.go('programacao',this)"><span class="sb-icon">📅</span> Programação <span class="sb-badge info" id="badge-pr">0</span></div>
+      <div class="sb-gl">Colaboradores</div>
+      <div class="sb-item" id="nav-colab" onclick="APP.go('colaborador',this)"><span class="sb-icon">👤</span> Ficha Individual</div>
+      <div class="sb-gl">Gestores</div>
+      <div class="sb-item" id="nav-gestores" onclick="APP.go('gestores',this)"><span class="sb-icon">📨</span> Alertar Gestores</div>
+      <div class="sb-gl">Automação</div>
+      <div class="sb-item" id="nav-alertas" onclick="APP.go('alertas',this)"><span class="sb-icon">🔔</span> Alertas / Outlook <span class="sb-badge warn" id="badge-al">0</span></div>
+    </nav>
+    <div class="sb-footer">
+      <div class="sb-user"><div class="sb-avatar">DP</div><div><div class="sb-uname">Depto. Pessoal</div><div class="sb-urole">Concremat Ind&amp;Miner</div></div></div>
+      <div class="sb-dev">Desenvolvido por Gustavo Dumont @gustavofgdumont</div>
+    </div>
+  </aside>
+
+  <div id="main">
+    <div id="topbar">
+      <div><div class="tb-title" id="tb-t">Dashboard</div><div class="tb-sub" id="tb-s"></div></div>
+      <div class="tb-sp"></div>
+      <div class="tb-search"><span>🔍</span><input type="text" id="gSearch" placeholder="Buscar colaborador..." oninput="APP.globalSearch(this.value)"></div>
+      <button class="tb-btn" onclick="APP.exportCSV()">📤 CSV</button>
+      <button class="tb-btn primary" id="btnMass" onclick="APP.abrirMassa()">✉️ Alertar Urgentes (<span id="cUrgent">0</span>)</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="ab" id="dashBanner" onclick="APP.goFilter('lt60')">
+        <span style="font-size:18px">🚨</span>
+        <div style="flex:1"><div class="ab-title" id="bannerT">Carregando...</div><div class="ab-sub" id="bannerS"></div></div>
+        <div class="ab-act">Ver todos →</div>
+      </div>
+      <div class="kpi-row" id="kpiRow"></div>
+
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-header">
+          <span class="card-title">🎛️ Filtros do Dashboard</span>
+          <div class="card-actions"><button class="card-btn" onclick="APP.clearDashFilters()">Limpar filtros</button></div>
+        </div>
+        <div class="cb-wrap" id="cbDash"><span class="cb-label">Contrato:</span></div>
+        
+        <div class="dash-filter-grid">
+          <input class="dash-input" id="dfNome" type="text" placeholder="Filtrar por colaborador" oninput="APP.setDashFilter('nome',this.value)">
+          <input class="dash-input" id="dfArea" type="text" placeholder="Filtrar por área/seção" oninput="APP.setDashFilter('area',this.value)">
+          <input class="dash-input" id="dfCargo" type="text" placeholder="Filtrar por cargo" oninput="APP.setDashFilter('cargo',this.value)">
+          <select class="dash-select" id="dfSit" onchange="APP.setDashFilter('situacao',this.value)">
+            <option value="all">Situação: todas</option>
+            <option value="marcada">Marcada</option>
+            <option value="gestor">Aguard. gestor</option>
+            <option value="paga">Paga</option>
+            <option value="ferias">Em férias</option>
+            <option value="finalizado">Finalizada</option>
+          </select>
+          <input class="dash-input" id="dfIni" type="date" title="Data inicial" onchange="APP.setDashFilter('ini',this.value)">
+          <input class="dash-input" id="dfFim" type="date" title="Data final" onchange="APP.setDashFilter('fim',this.value)">
+          <button class="tb-btn blue" style="height:30px" onclick="APP.clearDashFilters()">Resetar Filtros</button>
+        </div> <div class="dash-hint" id="dashSummary"></div>
+      </div>
+
+      <div class="g23" style="margin-bottom:12px">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-header">
+            <span class="card-title">👷 Efetivo em Férias por Período</span>
+            <div class="card-actions">
+              <button class="card-btn" id="btnGanttToggle" onclick="APP.toggleGanttView()">📅 Ver Gantt</button>
+              <button class="card-btn" id="btnChartTypeToggle" onclick="APP.toggleChart()">🔄 Barra/Linha</button>
+            </div>
+          </div>
+          <div id="chartSection">
+            <div style="padding:10px 13px;height:210px"><canvas id="chartEf"></canvas></div>
+            <div style="display:flex;gap:8px;padding:0 13px 10px;flex-wrap:wrap" id="chartLeg"></div>
+          </div>
+          <div id="ganttSection" style="display:none;overflow-x:auto;max-height:520px;overflow-y:auto;border-top:1px solid var(--border)"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="card" style="margin-bottom:0">
+            <div class="card-header"><span class="card-title">📈 Situação das Programações</span></div>
+            <div id="progSt"></div>
+          </div>
+          <div class="card" style="margin-bottom:0">
+            <div class="card-header"><span class="card-title">📊 Férias a Vencer</span></div>
+            <div id="urgSt"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-header">
+          <span class="card-title">📌 Férias por Cargo e Período</span>
+          <div class="card-actions"><span class="dash-matrix-note" id="dashMatrixNote"></span></div>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Cargo</th>
+                <th>Total de Programações</th>
+              </tr>
+            </thead>
+            <tbody id="dashCargoMatrix"></tbody>
+          </table>
+        </div>
+      </div> <div class="card" style="margin-bottom:12px">
+        <div class="card-header">
+          <span class="card-title">🗓️ Análise de Férias e Sobreposições</span>
+          <div class="card-actions"><span class="dash-matrix-note">Indicadores de encavalamento por Área e Cargo</span></div>
+        </div>
+        <div class="tbl-wrap" style="max-height: 300px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Área / Seção</th>
+                <th>Cargo</th>
+                <th>Colaborador</th>
+                <th>Início</th>
+                <th>Fim</th>
+                <th>Dias</th>
+                <th>Indicador</th>
+              </tr>
+            </thead>
+            <tbody id="dashOverlapsBody"></tbody>
+          </table>
+        </div>
+      </div> <div class="g2">
+        <div class="card" style="margin-bottom:0">
+          <div class="card-header"><span class="card-title">🔴 Ação Imediata (&lt;60 dias)</span>
+            <div class="card-actions"><button class="card-btn" onclick="APP.abrirMassa()">✉️ Alertar</button><button class="card-btn" onclick="APP.go('avencer',document.getElementById('nav-avencer'))">Ver todos →</button></div>
+          </div>
+          <div class="tbl-wrap" style="max-height:200px"><table><thead><tr><th></th><th>Nome</th><th>Chapa</th><th>Saldo</th><th>Limite</th><th></th></tr></thead><tbody id="tbCrit"></tbody></table></div>
+        </div>
+        <div class="card" style="margin-bottom:0">
+          <div class="card-header"><span class="card-title">✉️ Log de Alertas — Sessão</span>
+            <div class="card-actions"><button class="card-btn" onclick="APP.go('gestores',document.getElementById('nav-gestores'))">Gestores →</button></div>
+          </div>
+          <div id="alertLog" style="max-height:200px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div><!-- /dashboard -->
+
+    <!-- FÉRIAS A VENCER -->
+    <div class="page" id="page-avencer">
+      <div class="card" style="margin-bottom:0">
+        <!-- Urgency filters -->
+        <div class="fr" id="frAv">
+          <div class="chip active" data-f="all" onclick="APP.setFAv('all',this)">Todos</div>
+          <div class="chip uch-fin" data-f="finalizado" onclick="APP.setFAv('finalizado',this)">⬜ Finalizadas/Em Férias</div>
+          <div class="chip uch-lt60" data-f="lt60" onclick="APP.setFAv('lt60',this)">🔴 &lt;60 dias</div>
+          <div class="chip uch-crit" data-f="critico" onclick="APP.setFAv('critico',this)">🟠 Crítico 60–70d</div>
+          <div class="chip uch-aten" data-f="atencao" onclick="APP.setFAv('atencao',this)">🟡 Atenção 71–100d</div>
+          <div class="chip uch-lemb" data-f="lembrete" onclick="APP.setFAv('lembrete',this)">🔵 Lembretes 101–120d</div>
+          <div class="chip uch-ok" data-f="ok" onclick="APP.setFAv('ok',this)">🟢 Ok &gt;120d</div>
+        </div>
+        <!-- Contract multi-select filter for Avencer -->
+        <div class="cb-wrap" id="cbAv"><span class="cb-label">Contrato:</span></div>
+        <!-- Search + actions -->
+        <div class="fr" style="border-top:none">
+          <div class="fr-search"><span>🔍</span><input type="text" id="srAv" placeholder="Nome, chapa ou lotação..." oninput="APP.renderAv()"></div>
+          <div class="fr-right">
+            <button class="tb-btn" onclick="APP.exportCSV('avencer')">📤 CSV</button>
+            <button class="tb-btn primary" onclick="APP.abrirMassa()">✉️ Alertar Urgentes</button>
+          </div>
+        </div>
+        <div class="tbl-wrap" style="max-height:calc(100vh - 300px)">
+          <table><thead><tr>
+            <th style="width:4px"></th>
+            <th onclick="APP.sortAv('chapa')">Chapa</th>
+            <th onclick="APP.sortAv('nome')">Nome</th>
+            <th>Status</th>
+            <th>Lotação / Contrato</th>
+            <th onclick="APP.sortAv('periodoAquisitivo')">Período Aquisitivo</th>
+            <th onclick="APP.sortAv('dataLimite')">Data Limite</th>
+            <th onclick="APP.sortAv('saldo')">Saldo</th>
+            <th onclick="APP.sortAv('dias')">Faixa</th>
+            <th>Gestor</th>
+            <th>Ações</th>
+          </tr></thead>
+          <tbody id="tbAv"></tbody></table>
+        </div>
+        <div class="tbl-foot"><span id="cntAv"></span><div class="pg-btns" id="pgsAv"></div></div>
+      </div>
+    </div><!-- /avencer -->
+
+    <!-- PROGRAMAÇÃO -->
+    <div class="page" id="page-programacao">
+      <div class="card" style="margin-bottom:0">
+        <div class="fr">
+          <div class="chip active" data-s="all" onclick="APP.setFSit('all',this)">Todas</div>
+          <div class="chip uch-ok" data-s="marcada" onclick="APP.setFSit('marcada',this)">✅ Marcada</div>
+          <div class="chip uch-aten" data-s="gestor" onclick="APP.setFSit('gestor',this)">⏳ Aguard. Gestor</div>
+          <div class="chip uch-lemb" data-s="paga" onclick="APP.setFSit('paga',this)">💰 Paga</div>
+          <div class="fr-sep"></div>
+          <input class="dash-input" id="prIni" type="date" title="Data inicial" style="max-width:150px" oninput="APP.renderPr()">
+          <input class="dash-input" id="prFim" type="date" title="Data final" style="max-width:150px" oninput="APP.renderPr()">
+          <div class="fr-search"><span>🔍</span><input type="text" id="srPr" placeholder="Nome, seção, cargo..." oninput="APP.renderPr()"></div>
+          <div class="fr-right"><button class="tb-btn" onclick="APP.exportCSV('prog')">📤 CSV</button></div>
+        </div>
+        <div class="tbl-wrap" style="max-height:calc(100vh - 200px)">
+          <table><thead><tr>
+            <th onclick="APP.sortPr('matricula')">Matrícula</th>
+            <th onclick="APP.sortPr('nome')">Nome</th>
+            <th>Cargo</th>
+            <th onclick="APP.sortPr('secao')">Seção</th>
+            <th onclick="APP.sortPr('dtInicio')">DT Início</th>
+            <th onclick="APP.sortPr('dtFim')">DT Fim</th>
+            <th onclick="APP.sortPr('diasFerias')">Dias</th>
+            <th>Abono</th><th>13º</th>
+            <th onclick="APP.sortPr('situacao')">Situação</th>
+            <th>Aviso</th>
+          </tr></thead>
+          <tbody id="tbPr"></tbody></table>
+        </div>
+        <div class="tbl-foot"><span id="cntPr"></span><div class="pg-btns" id="pgsPr"></div></div>
+        <div class="dash-hint" id="prSummary"></div>
+      </div>
+    </div><!-- /programacao -->
+
+    <!-- FICHA -->
+    <div class="page" id="page-colaborador">
+      <div class="card" id="fichaEmpty" style="padding:50px 20px;text-align:center;margin-bottom:0">
+        <div style="font-size:36px;margin-bottom:10px">👤</div>
+        <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:5px">Nenhum colaborador selecionado</div>
+        <div style="font-size:12px;color:var(--text3)">Clique em qualquer linha das tabelas ou use a busca global.</div>
+      </div>
+      <div id="fichaWrap" style="display:none">
+        <div class="card" style="margin-bottom:12px"><div class="dh" id="fichaHero"></div><div class="info-grid" id="fichaInfo"></div></div>
+        <div class="g2">
+          <div class="card" style="margin-bottom:0"><div class="card-header"><span class="card-title">📆 Histórico de Férias</span><div class="card-actions"><span id="histSrc" style="font-size:10px;color:var(--text3)"></span></div></div><div class="tl" id="fichaTL"></div></div>
+          <div class="card" style="margin-bottom:0"><div class="card-header"><span class="card-title">✉️ Alertas — Esta Sessão</span><div class="card-actions"><button class="card-btn" onclick="APP.alertarSelecionado()">Alertar →</button></div></div><div id="fichaLog" style="padding:10px 13px;font-size:12px;color:var(--text3)">Nenhum alerta nesta sessão.</div></div>
+        </div>
+      </div>
+    </div><!-- /colaborador -->
+
+    <!-- GESTORES -->
+    <div class="page" id="page-gestores">
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-header"><span class="card-title">📨 Enviar Situação de Férias para Gestores</span></div>
+        <div style="padding:10px 14px;font-size:12px;color:var(--text2);line-height:1.7;border-bottom:1px solid var(--border)">
+          Para cada gestor, abre um rascunho no Outlook com <b>tabela estruturada</b>: seção de Finalizadas/Em Férias separada dos alertas a vencer (até 45 dias), organizados por urgência.
+        </div>
+        <div id="gestoresList"></div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="tb-btn primary" style="height:35px;font-size:13px" onclick="APP.alertarTodosGestores()">✉️ Abrir Outlook para Todos os Gestores</button>
+      </div>
+    </div><!-- /gestores -->
+
+    <!-- ALERTAS / CONFIGURAÇÕES -->
+    <div class="page" id="page-alertas">
+      <div class="g2">
+        <div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">⚙️ Configurações de Lembretes</span></div>
+            <div style="padding:6px 14px 4px;font-size:11.5px;color:var(--text2);border-bottom:1px solid var(--border)">Ative as faixas que devem ser incluídas ao usar <b>Alertar Urgentes</b> em massa. O Outlook abrirá um rascunho por colaborador para sua revisão.</div>
+            <div style="padding:13px">
+              <div class="rule-card">
+                <div class="rc-hdr"><div class="rc-name"><span style="color:var(--ufin-c)">⬜</span> Finalizadas / Em Férias</div><button class="toggle on" id="tog-fin" onclick="this.classList.toggle('on');this.classList.toggle('off');showToast(this.classList.contains('on')?'Ativado':'Desativado')"></button></div>
+                <div class="rc-desc">Colaboradores cujo período aquisitivo já venceu, ou que estão com status "Férias" (atualmente em gozo).</div>
+                <div class="rc-chs"><div class="ch-tag on">📧 Outlook</div><div class="ch-tag on">👤 Gestor em Cópia</div></div>
+              </div>
+              <div class="rule-card">
+                <div class="rc-hdr"><div class="rc-name"><span style="color:var(--ult60-c)">🔴</span> &lt;60 dias</div><button class="toggle on" id="tog-lt60" onclick="this.classList.toggle('on');this.classList.toggle('off');showToast(this.classList.contains('on')?'Ativado':'Desativado')"></button></div>
+                <div class="rc-desc">Vence em menos de 60 dias. Ação urgente necessária para agendamento.</div>
+                <div class="rc-chs"><div class="ch-tag on">📧 Outlook</div><div class="ch-tag on">👤 Gestor em Cópia</div></div>
+              </div>
+              <div class="rule-card">
+                <div class="rc-hdr"><div class="rc-name"><span style="color:var(--ucrit-c)">🟠</span> Crítico — 60 a 70 dias</div><button class="toggle on" id="tog-crit" onclick="this.classList.toggle('on');this.classList.toggle('off');showToast(this.classList.contains('on')?'Ativado':'Desativado')"></button></div>
+                <div class="rc-desc">Vence entre 60 e 70 dias. Iniciar planejamento imediato.</div>
+                <div class="rc-chs"><div class="ch-tag on">📧 Outlook</div><div class="ch-tag on">👤 Gestor em Cópia</div></div>
+              </div>
+              <div class="rule-card">
+                <div class="rc-hdr"><div class="rc-name"><span style="color:var(--uaten-c)">🟡</span> Atenção — 71 a 100 dias</div><button class="toggle off" id="tog-aten" onclick="this.classList.toggle('on');this.classList.toggle('off');showToast(this.classList.contains('on')?'Ativado':'Desativado')"></button></div>
+                <div class="rc-desc">Vence entre 71 e 100 dias. Lembrete de planejamento.</div>
+                <div class="rc-chs"><div class="ch-tag on">📧 Outlook</div><div class="ch-tag">👤 Gestor em Cópia</div></div>
+              </div>
+              <div class="rule-card">
+                <div class="rc-hdr"><div class="rc-name"><span style="color:var(--ulemb-c)">🔵</span> Lembretes — 101 a 120 dias</div><button class="toggle off" id="tog-lemb" onclick="this.classList.toggle('on');this.classList.toggle('off');showToast(this.classList.contains('on')?'Ativado':'Desativado')"></button></div>
+                <div class="rc-desc">Vence entre 101 e 120 dias. Aviso antecipado apenas ao colaborador.</div>
+                <div class="rc-chs"><div class="ch-tag on">📧 Outlook</div><div class="ch-tag">👤 Gestor em Cópia</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">📝 Templates de Mensagem</span></div>
+            <div style="padding:13px">
+              <div class="tpl-section">Colaborador — Urgente/Crítico</div>
+              <div class="tpl">Olá <span class="tpl-var">{NOME}</span>,<br><br>Suas férias (<span class="tpl-var">{PERIODO}</span>) vencem em <span class="tpl-var">{DATA_LIMITE}</span> (<span class="tpl-var">{SITUACAO}</span>). Saldo: <span class="tpl-var">{SALDO}</span> dias.<br><br>Entre em contato com seu gestor imediatamente.<br><br>Att, Depto. Pessoal — Concremat</div>
+              <div class="tpl-section">Gestor — Lista Estruturada por Urgência</div>
+              <div class="tpl">Prezado(a) <span class="tpl-var">{GESTOR}</span>,<br><br>Segue a situação de férias da sua equipe:<br><br><span class="tpl-var">FINALIZADAS/EM FÉRIAS</span><br><span class="tpl-var">────────────────────</span><br><span class="tpl-var">[tabela formatada]</span><br><br><span class="tpl-var">A VENCER EM ATÉ 15 / 30 / 45 DIAS</span><br><span class="tpl-var">[tabela por faixa]</span><br><br>Att, Depto. Pessoal</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">🚀 Ações em Massa</span></div>
+            <div style="padding:13px;display:flex;flex-direction:column;gap:8px">
+              <div style="font-size:12px;color:var(--text2);line-height:1.6">Abre um rascunho no Outlook por colaborador das faixas ativadas acima. Se o Outlook não abrir, o modal exibe o conteúdo para cópia manual.</div>
+              <button class="tb-btn primary" style="width:100%;justify-content:center;padding:10px" onclick="APP.abrirMassa()">🔴 Alertar Urgentes (<span id="cUrgent2">0</span>)</button>
+              <button class="tb-btn blue" style="width:100%;justify-content:center;padding:10px" onclick="APP.alertarTodosGestores()">📨 Alertar Todos os Gestores</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /alertas -->
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MODAL -->
+<div id="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-h"><span class="modal-title" id="mTitle">✉️ Outlook</span><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body" id="mBody"></div>
+    <div class="modal-foot" id="mFoot"><button class="tb-btn" onclick="closeModal()">Fechar</button></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+const GESTOR_EMAILS={
+  'ARTHUR':'ARTHUR.DUMONT@concremat.com.br',
+  'BRUNNO':'brunno.silva@concremat.com.br',
+  'CARINE':'carine.freitas@concremat.com.br',
+  'ELVES':'elves.gomes@concremat.com.br',
+  'HEBERTON':'Heberton.Largo@concremat.com.br',
+  'LEANDRO':'leandro.pechim@concremat.com.br',
+  'LUIZ CLAUDIO':'luiz.coelho@concremat.com.br',
+  'NAGILA':'nagila_melo@concremat.com.br',
+  'THAYSA':'thaysa.gomes@concremat.com.br',
+};
+
+// ── URGENCY CONFIG ──────────────────────────────────────────────
+const UC={
+  finalizado:{lbl:'Finalizada',  color:'#575757',bg:'#f5f5f5',strip:'var(--ufin-c)'},
+  ferias:    {lbl:'Em Férias',   color:'#004994',bg:'#e5f3fc',strip:'var(--ufer-c)'},
+  lt60:      {lbl:'<60 dias',    color:'#d93025',bg:'#fde8e8',strip:'var(--ult60-c)'},
+  critico:   {lbl:'Crítico',     color:'#F18700',bg:'#fef3e2',strip:'var(--ucrit-c)'},
+  atencao:   {lbl:'Atenção',     color:'#b86a00',bg:'#fffbeb',strip:'var(--uaten-c)'},
+  lembrete:  {lbl:'Lembrete',    color:'#0078C0',bg:'#e8f4fd',strip:'var(--ulemb-c)'},
+  ok:        {lbl:'Ok',          color:'#2e7d0e',bg:'#edf7e3',strip:'var(--uok-c)'},
+  marcada_nao_gozada: {lbl:'Prog. não gozada', color:'#7AC142', bg:'#edf7e3', strip:'var(--uok-c)'},
+};
+
+const APP=(()=>{
+const S={
+  fav:[],prog:[],efetivo:[],hist:[],
+  eMap:new Map(),hMap:new Map(),
+  futureDaysByName: new Map(), // <-- NOVO: Dicionário de performance
+  today:new Date(),selEmp:null,
+  fAv:'all',fSit:'all',
+  sAv:{c:'dias',d:'asc'},sPr:{c:'dtInicio',d:'asc'},
+  pgAv:0,pgPr:0,PG:50,
+  alertLog:[],
+  chartInst:null,chartType:'bar',viewMode:'chart',
+  dashContracts:new Set(),  // empty = all
+  avContracts:new Set(),
+  dashFilters:{nome:'',cargo:'',situacao:'all',mes:'',periodo:'mes',ini:'',fim:''},
+};
+
+// ── UTILS ──────────────────────────────────────────────────────
+const fd=d=>(!d||!(d instanceof Date)||isNaN(d))?'—':d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+const fs=d=>(!d||!(d instanceof Date)||isNaN(d))?'—':d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'2-digit'});
+function pd(v){
+  if(!v)return null;
+  if(v instanceof Date)return isNaN(v)?null:v;
+  if(typeof v==='number'){const d=new Date((v-25569)*86400000);return isNaN(d)?null:d;}
+  if(typeof v==='string'){const d=new Date(v);return isNaN(d)?null:d;}
+  return null;
+}
+const nn=n=>(n||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+const ini=n=>{const p=(n||'').split(' ').filter(Boolean);return p.length<1?'??':p.length===1?p[0].substring(0,2).toUpperCase():(p[0][0]+p[p.length-1][0]).toUpperCase()};
+const diasFn=dl=>!dl?9999:Math.floor((dl-S.today)/(1000*60*60*24));
+function urgFn(emp){
+  if(!emp)return'ok';
+  const st=(emp.status||'').trim();
+  const dl=emp.dataLimite;
+  if(st==='Férias')return'ferias';
+  if(!dl)return'ok';
+  const d=diasFn(dl);
+  if(d<0)return'finalizado';
+  if(d<60)return'lt60';
+  if(d<=70)return'critico';
+  if(d<=100)return'atencao';
+  if(d<=120)return'lembrete';
+  return'ok';
+}
+const urgKey=emp=>{const u=urgFn(emp);return u==='ferias'?'finalizado':u;};// merged group for counting
+const ucf=s=>s?(s.split(' ').map(w=>w?w.charAt(0).toUpperCase()+w.slice(1).toLowerCase():'').join(' ')):s;
+const contrFromLot=lot=>{const m=(lot||'').match(/\b(\d{8})\b/);return m?m[1]:''};
+const gestorEmail=g=>{if(!g)return'';const k=Object.keys(GESTOR_EMAILS).find(k=>g.toUpperCase().startsWith(k));return k?GESTOR_EMAILS[k]:''};
+const avBg=u=>u==='finalizado'||u==='ferias'?UC.finalizado.color:UC[u]?.color||'#aaa';
+const dateInputToDate=v=>{
+  if(!v)return null;
+  const d=new Date(`${v}T00:00:00`);
+  return isNaN(d)?null:d;
+};
+const endOfDay=d=>d?new Date(d.getFullYear(),d.getMonth(),d.getDate(),23,59,59,999):null;
+function normalizeRange(from,to){
+  from=from?new Date(from):null;
+  to=to?new Date(to):null;
+  if(from&&isNaN(from))from=null;
+  if(to&&isNaN(to))to=null;
+  if(from&&!to)to=from;
+  if(to&&!from)from=to;
+  if(from&&to&&from>to){const t=from;from=to;to=t;}
+  return {from:endOfDay(from?new Date(from.getFullYear(),from.getMonth(),from.getDate()):null),to:endOfDay(to)};
+}
+function overlap(aStart,aEnd,range){
+  if(!aStart||!aEnd||!range?.from||!range?.to)return false;
+  return aStart<=range.to && aEnd>=range.from;
+}
+function empProgDays(emp){
+  const n=parseInt(emp?.diasFeriasAv,10);
+  return Number.isFinite(n)&&n>0?n:0;
+}
+function temFeriasProgramadas(emp){
+  return !!emp?.temProg && empProgDays(emp)>0;
+}
+function feriasTotalmenteProgramadas(emp){
+  const saldo=parseInt(emp?.saldo,10)||0;
+  if(saldo<=0)return false;
+  
+  // Faz o cache do nome normalizado para não recalcular expressões regulares repetidas vezes
+  const nomeNorm = emp._nn || (emp._nn = nn(emp.nome));
+  
+  // Consulta o mapa de performance em tempo 0(1) em vez de varrer arrays gigantes
+  const diasFuturos = S.futureDaysByName.get(nomeNorm) || 0;
+  return diasFuturos >= saldo;
+}
+function podeAlertar(emp){
+  return !!emp && (parseInt(emp.saldo,10)||0)>0 && !feriasTotalmenteProgramadas(emp);
+}
+function urgFn(emp){
+  if(!emp)return'ok';
+  const st=(emp.status||'').trim();
+  const dl=emp.dataLimite;
+  if(st==='Férias')return'ferias';
+  if(feriasTotalmenteProgramadas(emp))return'marcada_nao_gozada';
+  if(!dl)return'ok';
+  const d=diasFn(dl);
+  if(d<0)return'finalizado';
+  if(d<60)return'lt60';
+  if(d<=70)return'critico';
+  if(d<=100)return'atencao';
+  if(d<=120)return'lembrete';
+  return'ok';
+}
+function dashActiveRange(f){
+  const ini=dateInputToDate(f?.ini||'');
+  const fim=dateInputToDate(f?.fim||'');
+  if(ini||fim)return normalizeRange(ini,fim);
+  return dashRangeForMonth(f?.mes,f?.periodo);
+}
+function fmtRangeLabel(from,to){
+  if(!from&&!to)return 'sem intervalo';
+  return `${fd(from)} — ${fd(to||from)}`;
+}
+function namesPreview(rows, limit=12){
+  const names=[...new Set((rows||[]).map(r=>ucf(r.nome||'').trim()).filter(Boolean))];
+  if(!names.length)return '';
+  const head=names.slice(0,limit).join(' · ');
+  return names.length>limit?`${head} · +${names.length-limit}`:head;
+}
+
+
+// ── PARSE ──────────────────────────────────────────────────────
+function parseFer(wb){
+  const shts = Object.keys(wb.Sheets);
+  
+  // 1. PROCESSAR ABA "FERIAS" (Programações / Histórico de marcações)
+  let progRows = [];
+  // Procura uma aba que se chame 'FERIAS' ou usa a primeira disponível
+  let ferShtName = shts.find(s => s.toUpperCase() === 'FERIAS') || shts[0];
+  if(wb.Sheets[ferShtName]) {
+    const wsFer = wb.Sheets[ferShtName];
+    const rawFer = XLSX.utils.sheet_to_json(wsFer, {header: 1});
+    let headerIdx = 0;
+    // Pula linhas em branco ou cabeçalhos de filtros do TOTVS
+    for (let i = 0; i < Math.min(rawFer.length, 15); i++) {
+      const row = rawFer[i] || [];
+      if (row.some(c => typeof c === 'string' && (c.toUpperCase().includes('MATRICULA') || c.toUpperCase().includes('CHAPA') || c.toUpperCase().includes('NOME')))) {
+        headerIdx = i; break;
+      }
+    }
+    progRows = XLSX.utils.sheet_to_json(wsFer, {range: headerIdx, defval: null});
+  }
+
+  // Mapeia para a estrutura interna de Programação do App
+  S.prog = progRows.map(r => ({
+    matricula: (r['MATRICULA'] || r['CHAPA'] || '').toString().trim(),
+    nome: (r['NOME'] || '').toString().trim(),
+    dtInicioPer: pd(r['DT INICIO PER AQUIS'] || r['PERIODO AQUISITIVO']),
+    dtFimPer: pd(r['DT FIM PER AQUIS']),
+    dtPagto: pd(r['DT PAGTO']),
+    dtInicio: pd(r['DT INICIO']),
+    dtFim: pd(r['DT FIM']),
+    nroDiasAbono: parseInt(r['NRO DIAS ABONO']) || 0,
+    dtAviso: pd(r['DT AVISO']),
+    diasFerias: parseInt(r['NRO DIAS FERIAS'] || r['DIAS FÉRIAS'] || r['DIAS']) || 0,
+    paga13: (r['PAGA 13º'] || '').toString(),
+    situacao: (r['SITUACAO FERIAS'] || r['STATUS'] || '').toString().trim(),
+    secao: (r['SEÇÃO'] || r['LOTAÇÃO'] || '').toString().trim(),
+    cargo: (r['CARGO'] || '').toString().trim(),
+    codCcusto: (r['COD. CCUSTO'] || '').toString(),
+    ccusto: (r['CCUSTO'] || '').toString().trim(),
+    codCcustoGlobal: (r['COD CCUSTO GLOBAL'] || '').toString().trim(),
+    ccustoGlobal: (r['CCUSTO GLOBAL'] || '').toString().trim(),
+    _ef: null
+  })).filter(r => r.nome && r.matricula);
+
+
+  // 2. PROCESSAR ABA "A VENCER" (Saldos e Limites Críticos)
+  let vencerRows = [];
+  let vencerShtName = shts.find(s => s.toUpperCase().includes('VENCER')) || shts[1];
+  
+  if(wb.Sheets[vencerShtName]) {
+    const wsVenc = wb.Sheets[vencerShtName];
+    const rawVenc = XLSX.utils.sheet_to_json(wsVenc, {header: 1});
+    let headerIdxV = 0;
+    for (let i = 0; i < Math.min(rawVenc.length, 10); i++) {
+      const row = rawVenc[i] || [];
+      if (row.some(c => typeof c === 'string' && (c.toUpperCase().includes('CHAPA') || c.toUpperCase().includes('NOME') || c.toUpperCase().includes('LIMITE')))) {
+        headerIdxV = i; break;
+      }
+    }
+    vencerRows = XLSX.utils.sheet_to_json(wsVenc, {range: headerIdxV, defval: null});
+  }
+
+  // Se a aba "A VENCER" não existir, tenta extrair os saldos direto da aba principal
+  if(vencerRows.length === 0) {
+    vencerRows = progRows;
+  }
+
+  // Alimenta a visão de Férias a Vencer (Garante o funcionamento dos KPIs e Cards)
+  const favMap = new Map();
+  vencerRows.forEach(r => {
+    const chapa = (r['CHAPA'] || r['MATRICULA'] || '').toString().trim();
+    const nome = (r['NOME'] || '').toString().trim();
+    if(!chapa || !nome) return;
+
+    const perAquisitivo = pd(r['PERIODO AQUISITIVO'] || r['DT INICIO PER AQUIS']);
+    const key = `${chapa}-${perAquisitivo ? perAquisitivo.getTime() : 'base'}`;
+
+    let dtLimite = pd(r['DATA LIMITE']);
+    if(!dtLimite && r['DT FIM PER AQUIS']) {
+      let fPer = pd(r['DT FIM PER AQUIS']);
+      dtLimite = new Date(fPer.getFullYear() + 1, fPer.getMonth() + 11, fPer.getDate());
+    }
+
+    let saldoCalculado = r['SALDO'] !== undefined && r['SALDO'] !== null ? parseInt(r['SALDO']) : 30;
+
+    if(!favMap.has(key)) {
+      favMap.set(key, {
+        chapa: chapa,
+        nome: nome,
+        status: (r['STATUS'] || r['SITUACAO FERIAS'] || 'Ativo').toString().trim(),
+        lotacao: (r['LOTAÇÃO'] || r['SEÇÃO'] || '').toString().trim(),
+        periodoAquisitivo: perAquisitivo,
+        dataLimite: dtLimite,
+        programadas: pd(r['PROGRAMADAS'] || r['DT INICIO']),
+        saldo: saldoCalculado,
+        diasFeriasAv: parseInt(r['DIAS FÉRIAS'] || r['NRO DIAS FERIAS']) || 0,
+        temProg: !!pd(r['PROGRAMADAS'] || r['DT INICIO']),
+        _ef: null,
+        _sent: false
+      });
+    }
+  });
+
+  S.fav = Array.from(favMap.values());
+}
+function parseEf(wb){
+  const ws=wb.Sheets['Efetivo'];if(!ws)return;
+  const rows=XLSX.utils.sheet_to_json(ws,{defval:null});
+  S.efetivo=rows.map(r=>({
+    nome:(r['Funcionário']||'').toString().trim(),admissao:pd(r['Admissão']),
+    gestor:(r['Gestor Responsavel']||'').toString().trim(),
+    cargo:(r['Cargo CTPS']||'').toString().trim(),
+    email:(r['Email Corporativo']||'').toString().trim().replace('#N/A','').replace(';',''),
+    localTrabalho:(r['Local de Trabalho']||'').toString().trim(),
+    empresa:(r['Empresa']||'').toString().trim(),
+    situacao:(r['Situação']||'').toString().trim(),
+    cidade:(r['Cidade']||'').toString().trim(),estado:(r['Estado']||'').toString().trim(),id:r['ID'],
+  })).filter(r=>r.nome);
+  S.eMap.clear();S.efetivo.forEach(e=>S.eMap.set(nn(e.nome),e));
+}
+function parseHist(wb){
+  const ws=wb.Sheets['Sheet1'];if(!ws)return;
+  const rows=XLSX.utils.sheet_to_json(ws,{defval:null});
+  S.hist=rows.map(r=>({
+    id:r['ID        '],nome:(r['NOME                                      ']||'').toString().trim(),
+    iniPerAquis:pd(r['INI. PER. AQUIS']),finPerAquis:pd(r['FIN. PER. AQUIS']),
+    dtIniGozo:pd(r['DT INI GOZO']),dtFinGozo:pd(r['DT FIN GOZO']),
+    dias:r['DIAS']||0,abono:r['ABONO ']||0,
+    salario13:(r['13o SALÁRIO']||'').toString().trim(),dtPagamento:pd(r['DT. PAGAMENTO']),
+  })).filter(r=>r.nome&&r.dtIniGozo);
+  S.hMap.clear();
+  S.hist.forEach(h=>{const k=nn(h.nome);if(!S.hMap.has(k))S.hMap.set(k,[]);S.hMap.get(k).push(h);});
+}
+function joinEf(){S.fav.forEach(f=>{f._ef=S.eMap.get(nn(f.nome))||null});S.prog.forEach(l=>{l._ef=S.eMap.get(nn(l.nome))||null});}
+
+// ── CONTRACTS ─────────────────────────────────────────────────
+function getAllContracts(){
+  const m=new Map();
+  S.prog.forEach(r=>{const k=r.codCcustoGlobal?r.codCcustoGlobal.slice(-8):'';if(k){const lbl=r.ccustoGlobal?`${k} — ${r.ccustoGlobal.substring(0,28)}`:k;if(!m.has(k))m.set(k,lbl);}});
+  // Also from FAV lotacao
+  S.fav.forEach(f=>{const k=contrFromLot(f.lotacao);if(k&&!m.has(k))m.set(k,k);});
+  return [...m.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+}
+function buildContractBar(containerId,selectedSet,onToggle){
+  const bar=document.getElementById(containerId);if(!bar)return;
+  const contracts=getAllContracts();
+  const allSel=selectedSet.size===0;
+  let html=`<div class="contract-chip all-chip ${allSel?'sel':''}" onclick="APP.toggleContract('${containerId}','__all__')">Ver Todos</div>`;
+  contracts.forEach(([k,lbl])=>{
+    const sel=!allSel&&selectedSet.has(k);
+    html+=`<div class="contract-chip ${sel?'sel':''}" title="${lbl}" onclick="APP.toggleContract('${containerId}','${k}')">${k}</div>`;
+  });
+  bar.innerHTML='<span class="cb-label">Contrato:</span>'+html;
+}
+function toggleContract(barId,k){
+  const set=barId==='cbDash'?S.dashContracts:S.avContracts;
+  if(k==='__all__'){set.clear();}
+  else{if(set.has(k))set.delete(k);else set.add(k);if(set.size===getAllContracts().length)set.clear();}
+  buildContractBar(barId,set);
+  if(barId==='cbDash'){renderDash();}
+  else{S.pgAv=0;renderAv();}
+}
+function contrMatch(emp,set){
+  if(set.size===0)return true;
+  return set.has(contrFromLot(emp.lotacao||''));
+}
+
+// ── DASHBOARD FILTERS ──────────────────────────────────────────
+const dashNorm=v=>(v||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+const dashMonthStr=dt=>{
+  const d=dt instanceof Date?dt:new Date(dt);
+  if(!(d instanceof Date)||isNaN(d))return '';
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0');
+  return `${y}-${m}`;
+};
+function getDashFilters(){
+  const nome = document.getElementById('dfNome')?.value || '';
+  const area = document.getElementById('dfArea')?.value || '';
+  const cargo = document.getElementById('dfCargo')?.value || '';
+  const situacao = document.getElementById('dfSit')?.value || 'all';
+  const ini = document.getElementById('dfIni')?.value || S.dashFilters.ini || '';
+  const fim = document.getElementById('dfFim')?.value || S.dashFilters.fim || '';
+  const mes = document.getElementById('dfMes')?.value || '';
+  
+  S.dashFilters = {nome, area, cargo, situacao, mes, ini, fim};
+  return {...S.dashFilters};
+}
+function syncDashFiltersUI(){
+  const f=S.dashFilters;
+  const n=document.getElementById('dfNome'); if(n&&n.value!==f.nome)n.value=f.nome;
+  const c=document.getElementById('dfCargo'); if(c&&c.value!==f.cargo)c.value=f.cargo;
+  const s=document.getElementById('dfSit'); if(s&&s.value!==f.situacao)s.value=f.situacao;
+  const i=document.getElementById('dfIni'); if(i&&i.value!==f.ini)i.value=f.ini;
+  const ff=document.getElementById('dfFim'); if(ff&&ff.value!==f.fim)ff.value=f.fim;
+  const m=document.getElementById('dfMes'); if(m&&m.value!==f.mes)m.value=f.mes;
+}
+function setDashFilter(key,val){
+  S.dashFilters[key]=val;
+  renderDash();
+}
+function clearDashFilters(){
+  S.dashContracts.clear();
+  S.dashFilters = {nome:'', area:'', cargo:'', situacao:'all', mes:'', periodo:'mes', ini:'', fim:''};
+  const m=document.getElementById('dfMes'); if(m) m.value='';
+  renderDash();
+}
+function dashProgContract(r){
+  return r.codCcustoGlobal?r.codCcustoGlobal.slice(-8):'';
+}
+function dashRangeForMonth(monthStr){
+  if(!monthStr)return null;
+  const [y,m]=monthStr.split('-').map(Number);
+  if(!y||!m)return null;
+  const start=new Date(y,m-1,1);
+  const endMonth=new Date(y,m,0);
+  return {from:start,to:new Date(y,m-1,endMonth.getDate(),23,59,59,999),start,endMonth};
+}
+function dashOverlapsRange(a,b,range){
+  return !!(a&&b&&range&&a<=range.to&&b>=range.from);
+}
+function dashTextMatch(hay,needle){
+  if(!needle)return true;
+  return dashNorm(hay).includes(dashNorm(needle));
+}
+function dashProgMatches(r, f){
+  if(!contrMatch({lotacao:r.codCcustoGlobal?`XXX ${r.codCcustoGlobal.slice(-8)}`:''}, S.dashContracts)) return false;
+  if(!dashTextMatch(r.nome, f.nome)) return false;
+  if(!dashTextMatch(r.cargo, f.cargo)) return false;
+  if(!dashTextMatch(r.secao, f.area)) return false; // <-- Aplica o novo filtro de Área
+  if(f.situacao !== 'all' && !dashNorm(r.situacao).includes(dashNorm(f.situacao))) return false;
+  
+  const range = dashActiveRange(f);
+  if(range && !overlap(r.dtInicio, r.dtFim, range)) return false;
+  return true;
+}
+function dashFavMatches(fav,f){
+  const cargo=fav._ef?.cargo||'';
+  const baseStatus=dashNorm(fav.status||'');
+  const urg=(urgFn(fav)==='ferias'?'finalizado':urgFn(fav));
+  if(!contrMatch(fav,S.dashContracts))return false;
+  if(!dashTextMatch(fav.nome,f.nome))return false;
+  if(!dashTextMatch(cargo,f.cargo))return false;
+  if(f.situacao!=='all'&&!dashNorm(urg).includes(dashNorm(f.situacao))&&!baseStatus.includes(dashNorm(f.situacao)))return false;
+  return true;
+}
+function dashFilteredProg(){
+  const f=getDashFilters();
+  return S.prog.filter(r=>dashProgMatches(r,f));
+}
+function dashFilteredFav(){
+  const f=getDashFilters();
+  return S.fav.filter(r=>dashFavMatches(r,f));
+}
+function dashCargoMatrix(rows,f){
+  const range=dashActiveRange(f);
+  const cargos=new Map();
+  rows.forEach(r=>{
+    const cargo=(r.cargo||'Sem cargo').trim()||'Sem cargo';
+    if(!cargos.has(cargo))cargos.set(cargo,{total:0, pessoas:[]});
+    
+    // Se um mês foi selecionado, valida. Se deixado vazio, inclui tudo do array
+    if(!range || overlap(r.dtInicio,r.dtFim,range)){
+      cargos.get(cargo).pessoas.push(r);
+      cargos.get(cargo).total++;
+    }
+  });
+
+  const arr=[...cargos.entries()]
+    .filter(([_,v])=>v.total>0)
+    .sort((a,b)=>b[1].total-a[1].total||a[0].localeCompare(b[0]));
+    
+  if(!arr.length)return `<tr><td colspan="2" class="empty">Nenhuma programação encontrada${range?' para o período':' para os filtros'}.</td></tr>`;
+
+  return arr.map(([cargo,v], i)=>`
+    <tr class="clk" onclick="APP.toggleCargoRow(${i})" style="background:#fafbfc;border-bottom:1px solid #dde3ea">
+      <td><b>${cargo}</b> <span style="font-size:10px;color:var(--mid);margin-left:5px" id="cargo-icon-${i}">▼</span></td>
+      <td class="td-m"><b>${v.total}</b></td>
+    </tr>
+    <tr id="cargo-row-${i}" style="display:none">
+      <td colspan="2" style="padding:0;border-bottom:2px solid var(--border)">
+        <table style="width:100%;background:#fff;margin:0">
+          <thead style="background:#f2f4f7">
+            <tr>
+              <th style="padding:5px 10px;font-size:9.5px;border-bottom:1px solid #dde3ea;text-align:left">Nome</th>
+              <th style="padding:5px 10px;font-size:9.5px;border-bottom:1px solid #dde3ea;text-align:left">Período de Férias</th>
+              <th style="padding:5px 10px;font-size:9.5px;border-bottom:1px solid #dde3ea;text-align:left">Dias</th>
+              <th style="padding:5px 10px;font-size:9.5px;border-bottom:1px solid #dde3ea;text-align:left">Situação</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${v.pessoas.map(p=>`
+              <tr class="clk" onclick="event.stopPropagation(); APP.globalSearch('${p.nome}')">
+                <td style="padding:6px 10px;font-size:11px;font-weight:600">${ucf(p.nome)}</td>
+                <td class="td-m" style="padding:6px 10px;font-size:11px">${fd(p.dtInicio)} a ${fd(p.dtFim)}</td>
+                <td class="td-m" style="padding:6px 10px;font-size:11px">${p.diasFerias}d</td>
+                <td style="padding:6px 10px;font-size:11px"><span class="badge ${p.situacao.toLowerCase().includes('marcada')?'green':p.situacao.toLowerCase().includes('gestor')?'orange':'gray'}">${p.situacao.replace(/^[MGP] - /,'')}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function toggleCargoRow(idx) {
+  const row = document.getElementById(`cargo-row-${idx}`);
+  const icon = document.getElementById(`cargo-icon-${idx}`);
+  if (row.style.display === 'none') {
+    row.style.display = 'table-row';
+    icon.textContent = '▲';
+  } else {
+    row.style.display = 'none';
+    icon.textContent = '▼';
+  }
+}
+
+// ── CHART ─────────────────────────────────────────────────────
+function renderChartEf(data){
+  const progRows=data||dashFilteredProg();
+  const today=S.today;
+  const months=[];for(let i=-1;i<13;i++){months.push(new Date(today.getFullYear(),today.getMonth()+i,1));}
+  const labels=months.map(m=>m.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}));
+  const allContr=getAllContracts();
+  const selContr=S.dashContracts.size===0?allContr.map(([k])=>k):[...S.dashContracts];
+  const COLORS=['#004994','#0078C0','#F18700','#7AC142','#00B0E8','#5BA0D1','#d93025','#173557'];
+  const datasets=selContr.map((k,ci)=>{
+    const data=months.map(m=>{
+      const y=m.getFullYear(),mo=m.getMonth();
+      return progRows.filter(r=>{
+        const rk=dashProgContract(r);
+        if(rk!==k)return false;
+        if(!r.dtInicio||!r.dtFim)return false;
+        return r.dtInicio.getFullYear()*12+r.dtInicio.getMonth()<=y*12+mo&&r.dtFim.getFullYear()*12+r.dtFim.getMonth()>=y*12+mo;
+      }).length;
+    });
+    return{label:k,data,backgroundColor:COLORS[ci%COLORS.length]+'cc',borderColor:COLORS[ci%COLORS.length],borderWidth:S.chartType==='line'?2:0,borderRadius:2,fill:false,tension:.3};
+  });
+  let legHTML='';datasets.forEach(d=>{const lbl=getAllContracts().find(([k])=>k===d.label);const nm=lbl?(lbl[1].split('—')[1]||d.label).trim().substring(0,22):d.label;legHTML+=`<div style="display:flex;align-items:center;gap:4px;font-size:9.5px;color:var(--text3)"><div style="width:9px;height:9px;border-radius:2px;background:${d.borderColor};flex-shrink:0"></div>${d.label}: ${nm}</div>`;});
+  document.getElementById('chartLeg').innerHTML=legHTML;
+  if(S.chartInst)S.chartInst.destroy();
+  const ctx=document.getElementById('chartEf').getContext('2d');
+  const stacked=S.dashContracts.size===0||S.chartType==='bar';
+  S.chartInst=new Chart(ctx,{type:S.chartType,data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{mode:'index'}},scales:{x:{stacked,grid:{display:false},ticks:{font:{size:9.5},color:'#8a9bb0'}},y:{stacked,grid:{color:'#f0f2f5'},ticks:{font:{size:9.5},color:'#8a9bb0'}}}}});
+}
+
+function toggleChart(){S.chartType=S.chartType==='bar'?'line':'bar';renderChartEf();}
+
+function toggleGanttView(){
+  S.viewMode=S.viewMode==='gantt'?'chart':'gantt';
+  const cSec=document.getElementById('chartSection');
+  const gSec=document.getElementById('ganttSection');
+  const btn=document.getElementById('btnGanttToggle');
+  const btnT=document.getElementById('btnChartTypeToggle');
+  if(S.viewMode==='gantt'){
+    cSec.style.display='none';
+    gSec.style.display='block';
+    if(btn){btn.textContent='📊 Ver Gráfico';btn.style.background='var(--navy)';btn.style.color='#fff';btn.style.borderColor='var(--navy)';}
+    if(btnT)btnT.style.display='none';
+    renderGanttChart(dashFilteredProg());
+  }else{
+    cSec.style.display='';
+    gSec.style.display='none';
+    if(btn){btn.textContent='📅 Ver Gantt';btn.style.background='';btn.style.color='';btn.style.borderColor='';}
+    if(btnT)btnT.style.display='';
+    renderChartEf();
+  }
+}
+
+function renderGanttChart(progRows){
+  const sec=document.getElementById('ganttSection');
+  if(!sec)return;
+  const rows=(progRows||dashFilteredProg()).filter(r=>r.dtInicio&&r.dtFim);
+  if(!rows.length){
+    sec.innerHTML='<div class="empty" style="padding:28px 16px">Nenhuma programação com datas para exibir no Gantt.<br><span style="font-size:11px;color:var(--text3)">Aplique filtros ou carregue dados com datas de início e fim.</span></div>';
+    return;
+  }
+  const today=S.today;
+  // Determina range de tempo
+  let tS=new Date(Math.min(...rows.map(r=>r.dtInicio.getTime())));
+  let tE=new Date(Math.max(...rows.map(r=>r.dtFim.getTime())));
+  // Snap para limites de mês
+  tS=new Date(tS.getFullYear(),tS.getMonth(),1);
+  tE=new Date(tE.getFullYear(),tE.getMonth()+1,0,23,59,59);
+  // Garante mínimo: mês anterior até +10 meses
+  const minS=new Date(today.getFullYear(),today.getMonth()-1,1);
+  const minE=new Date(today.getFullYear(),today.getMonth()+10,0,23,59,59);
+  if(tS>minS)tS=minS;
+  if(tE<minE)tE=minE;
+  const totalMs=tE.getTime()-tS.getTime();
+  const pct=d=>Math.max(0,Math.min(100,((d.getTime()-tS.getTime())/totalMs)*100));
+  // Meses para header
+  const months=[];let m=new Date(tS);
+  while(m<=tE){months.push(new Date(m));m=new Date(m.getFullYear(),m.getMonth()+1,1);}
+  const COLORS=['#004994','#0078C0','#F18700','#7AC142','#00B0E8','#d93025','#5BA0D1','#173557','#8B5CF6','#EC4899'];
+  const sorted=[...rows].sort((a,b)=>a.dtInicio-b.dtInicio);
+  // Calcula posições de meses
+  const mHdrs=months.map(mo=>{
+    const moE=new Date(mo.getFullYear(),mo.getMonth()+1,0,23,59,59);
+    const l=pct(mo);
+    const rr=pct(new Date(Math.min(moE.getTime(),tE.getTime())));
+    return{mo,l,w:Math.max(0,rr-l)};
+  });
+  const tPct=pct(today);
+  const showT=tPct>=0&&tPct<=100;
+  // Mês atual highlight
+  const nowMonthStart=new Date(today.getFullYear(),today.getMonth(),1);
+  const nowMonthEnd=new Date(today.getFullYear(),today.getMonth()+1,0,23,59,59);
+  const nowML=pct(nowMonthStart);
+  const nowMW=pct(nowMonthEnd)-nowML;
+  // HTMLs auxiliares
+  const mBgHTML=mHdrs.filter((_,i)=>i%2===0).map(h=>`<div class="gantt-month-bg" style="left:${h.l.toFixed(2)}%;width:${h.w.toFixed(2)}%"></div>`).join('');
+  const mNowHTML=`<div class="gantt-now-month" style="left:${nowML.toFixed(2)}%;width:${Math.max(0,nowMW).toFixed(2)}%"></div>`;
+  const mLblHTML=mHdrs.map(h=>`<div class="gantt-month-hdr" style="left:${h.l.toFixed(2)}%;width:${h.w.toFixed(2)}%"><span class="gantt-month-lbl">${h.mo.toLocaleDateString('pt-BR',{month:'short'})}</span></div>`).join('');
+  const todayHTML=showT?`<div class="gantt-today-mk" style="left:${tPct.toFixed(2)}%" title="Hoje"></div><span class="gantt-today-lbl" style="left:${tPct.toFixed(2)}%">Hoje</span>`:'';
+  const hdrMHdrs=mHdrs.map(h=>`<div class="gantt-month-hdr-top" style="left:${h.l.toFixed(2)}%;width:${h.w.toFixed(2)}%"><span class="gantt-month-lbl-top">${h.mo.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'})}</span></div>`).join('');
+  // Linhas de colaboradores
+  const rowsHTML=sorted.map((r,i)=>{
+    const l=pct(r.dtInicio);
+    const w=Math.max(0.6,pct(r.dtFim)-l);
+    const color=COLORS[i%COLORS.length];
+    const firstName=ucf(r.nome).split(' ')[0];
+    const barLbl=`${firstName} · ${r.diasFerias}d`;
+    const tipTxt=`${ucf(r.nome)} | ${fd(r.dtInicio)} – ${fd(r.dtFim)} | ${r.diasFerias} dias`;
+    const sitBadge=r.situacao?(r.situacao.toLowerCase().includes('marcada')?'green':r.situacao.toLowerCase().includes('gestor')?'orange':r.situacao.toLowerCase().includes('paga')?'blue':'gray'):'gray';
+    return`<tr class="clk" onclick="APP.globalSearch('${r.nome}')">
+      <td class="gantt-col-info">
+        <div style="font-weight:600;font-size:12px;color:var(--navy)">${ucf(r.nome)}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.cargo||''}">${(r.cargo||'').substring(0,30)}</div>
+      </td>
+      <td class="gantt-dates-col">
+        <div style="font-size:10.5px">${fd(r.dtInicio)}</div>
+        <div style="font-size:10.5px;color:var(--text3)">${fd(r.dtFim)}</div>
+      </td>
+      <td class="gantt-days-col">
+        <span class="badge" style="background:${color}22;color:${color};border:1px solid ${color}44;font-weight:700">${r.diasFerias}d</span>
+      </td>
+      <td class="gantt-timeline-cell">
+        <div class="gantt-track">
+          ${mBgHTML}${mNowHTML}${mLblHTML}
+          <div class="gantt-bar" style="left:${l.toFixed(2)}%;width:${w.toFixed(2)}%;background:${color}" title="${tipTxt}">
+            <span class="gantt-bar-txt">${barLbl}</span>
+          </div>
+          ${todayHTML}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  // Rodapé com totais
+  const totalDias=sorted.reduce((s,r)=>s+(r.diasFerias||0),0);
+  const footHTML=`<tr style="background:#f8f9fb">
+    <td colspan="3" style="padding:7px 8px;font-size:11px;font-weight:700;color:var(--navy)">
+      ${sorted.length} programação(ões) · ${totalDias} dias no total
+    </td>
+    <td class="gantt-timeline-cell" style="padding:4px 8px">
+      <div style="height:14px;position:relative">${hdrMHdrs}${todayHTML}</div>
+    </td>
+  </tr>`;
+  sec.innerHTML=`<div class="gantt-wrap"><table class="gantt-table">
+    <thead><tr>
+      <th class="gantt-col-info">Colaborador / Cargo</th>
+      <th>Início · Fim</th>
+      <th style="text-align:center">Dias</th>
+      <th class="gantt-timeline-cell">
+        <div style="height:22px;position:relative;overflow:visible">
+          ${hdrMHdrs}
+          ${showT?`<div class="gantt-today-mk" style="left:${tPct.toFixed(2)}%" title="Hoje"></div>`:''}
+        </div>
+      </th>
+    </tr></thead>
+    <tbody>${rowsHTML}</tbody>
+    <tfoot>${footHTML}</tfoot>
+  </table></div>`;
+}
+
+
+function stAll(list=S.fav){const cnt={finalizado:0,lt60:0,critico:0,atencao:0,lembrete:0,ok:0};list.forEach(f=>{const u=urgFn(f);const k=u==='ferias'?'finalizado':u;cnt[k]=(cnt[k]||0)+1;});return cnt;}
+function progSt(list=S.prog){let m=0,g=0,p=0;list.forEach(l=>{const s=(l.situacao||'').toLowerCase();if(s.includes('marcada'))m++;else if(s.includes('gestor'))g++;else if(s.includes('paga'))p++;});return{m,g,p,tot:list.length};}
+
+function renderOverlaps(progRows) {
+    const tbody = document.getElementById('dashOverlapsBody');
+    if(!tbody) return;
+    
+    const validProg = progRows.filter(r => r.dtInicio && r.dtFim);
+    
+    validProg.sort((a, b) => {
+      const areaA = (a.secao || 'Sem Área').toLowerCase();
+      const areaB = (b.secao || 'Sem Área').toLowerCase();
+      if (areaA !== areaB) return areaA.localeCompare(areaB);
+      
+      const cargoA = (a.cargo || 'Sem Cargo').toLowerCase();
+      const cargoB = (b.cargo || 'Sem Cargo').toLowerCase();
+      if (cargoA !== cargoB) return cargoA.localeCompare(cargoB);
+      
+      return a.dtInicio - b.dtInicio;
+    });
+
+    let html = '';
+    
+    validProg.forEach((curr, i) => {
+      let hasOverlap = false;
+      let overlapNames = [];
+      
+      for (let j = 0; j < validProg.length; j++) {
+        if (i === j) continue;
+        const other = validProg[j];
+        
+        if (curr.secao === other.secao && curr.cargo === other.cargo) {
+          if (curr.dtInicio <= other.dtFim && other.dtInicio <= curr.dtFim) {
+            hasOverlap = true;
+            overlapNames.push(ini(other.nome));
+          }
+        }
+      }
+
+      const trClass = hasOverlap ? 'overlap-row clk' : 'clk';
+      const indicator = hasOverlap 
+        ? `<span class="badge-conflito" title="Sobreposição com: ${overlapNames.join(', ')}">🚨 Conflito</span>` 
+        : `<span class="badge green">🟢 Livre</span>`;
+
+      html += `<tr class="${trClass}" onclick="APP.go('colaborador', null); APP.searchAndSelect('${curr.matricula}')">
+        <td><div class="td-m">${curr.secao || '—'}</div></td>
+        <td>${curr.cargo || '—'}</td>
+        <td style="font-weight:600">${curr.nome}</td>
+        <td>${fd(curr.dtInicio)}</td>
+        <td>${fd(curr.dtFim)}</td>
+        <td><span class="badge gray">${curr.diasFerias} dias</span></td>
+        <td>${indicator}</td>
+      </tr>`;
+    });
+
+    if (validProg.length === 0) {
+      html = `<tr><td colspan="7" class="empty">Nenhuma programação encontrada para os filtros atuais.</td></tr>`;
+    }
+
+    tbody.innerHTML = html;
+  }
+
+// ── RENDER: DASHBOARD ─────────────────────────────────────────
+function renderDash(){
+  const f=getDashFilters();
+  if(!f.mes)f.mes=dashMonthStr(new Date());
+  S.dashFilters=f;
+  syncDashFiltersUI();
+  buildContractBar('cbDash',S.dashContracts);
+
+  const progF=dashFilteredProg();
+  const favF=dashFilteredFav();
+
+  const cnt=stAll(favF);const urgent=cnt.finalizado+cnt.lt60+cnt.critico;
+  document.getElementById('bannerT').textContent=urgent>0?`${urgent} colaborador(es) com férias finalizadas, vencidas ou vencendo em breve (≤70 dias)`:'Nenhuma ação urgente no momento';
+  const top3=favF.filter(e=>['ferias','finalizado','lt60','critico'].includes(urgFn(e))).sort((a,b)=>diasFn(a.dataLimite)-diasFn(b.dataLimite)).slice(0,3);
+  document.getElementById('bannerS').textContent=top3.length?top3.map(e=>{const u=urgFn(e);return`${ucf(e.nome).split(' ').slice(0,2).join(' ')} (${UC[u]?.lbl||u})`}).join(' · '):'Sem colaboradores nas faixas urgentes para os filtros atuais.';
+
+  const KPIS=[
+    {k:'finalizado',label:'Finalizadas/Em Férias',icon:'⬜',cls:'fin'},
+    {k:'lt60',label:'&lt;60 dias',icon:'🔴',cls:'lt60'},
+    {k:'critico',label:'Crítico 60–70d',icon:'🟠',cls:'crit'},
+    {k:'atencao',label:'Atenção 71–100d',icon:'🟡',cls:'aten'},
+    {k:'lembrete',label:'Lembretes 101–120d',icon:'🔵',cls:'lemb'},
+    {k:'ok',label:'Ok &gt;120d',icon:'🟢',cls:'ok'},
+  ];
+  document.getElementById('kpiRow').innerHTML=KPIS.map(kp=>`
+    <div class="kpi" style="cursor:${kp.k==='ok'||kp.k==='lembrete'?'default':'pointer'};border-top-color:${UC[kp.k==='finalizado'?'finalizado':kp.k]?.color||'#aaa'}" onclick="APP.goFilter('${kp.k}')">
+      <div class="kpi-n" style="color:${UC[kp.k==='finalizado'?'finalizado':kp.k]?.color||'#aaa'};font-size:24px">${cnt[kp.k]||0}</div>
+      <div class="kpi-label">${kp.icon} ${kp.label}</div>
+    </div>`).join('');
+
+  if(S.viewMode==='gantt')renderGanttChart(progF);else renderChartEf(progF);
+
+  const p=progSt(progF);
+  document.getElementById('progSt').innerHTML=`
+    <div class="stat-mini"><span>Marcadas</span><b>${p.m}</b></div>
+    <div class="stat-mini"><span>Aguard. Gestor</span><b>${p.g}</b></div>
+    <div class="stat-mini"><span>Pagas</span><b>${p.p}</b></div>
+    <div class="stat-mini"><span>Total</span><b>${p.tot}</b></div>`;
+  const urg={finalizado:cnt.finalizado,lt60:cnt.lt60,critico:cnt.critico,atencao:cnt.atencao,lembrete:cnt.lembrete,ok:cnt.ok};
+  document.getElementById('urgSt').innerHTML=Object.entries(urg).map(([k,v])=>`<div class="stat-mini"><span>${UC[k]?.lbl||k}</span><b>${v}</b></div>`).join('');
+
+  document.getElementById('tbCrit').innerHTML=favF.filter(e=>['finalizado','lt60','critico'].includes(urgFn(e))).sort((a,b)=>diasFn(a.dataLimite)-diasFn(b.dataLimite)).slice(0,8).map(e=>{
+    const u=urgFn(e);
+    return `<tr class="clk" onclick="APP.openFichaIdx(${S.fav.indexOf(e)})"><td style="border-left:4px solid ${UC[u]?.color||'#aaa'}"></td><td>${ucf(e.nome)}</td><td class="td-m">${e.chapa}</td><td>${e.saldo}d</td><td>${fd(e.dataLimite)}</td><td><span class="badge ${u==='lt60'?'red':u==='critico'?'orange':u==='finalizado'?'gray':'blue'}">${UC[u]?.lbl||u}</span></td></tr>`;
+  }).join('')||'<tr><td colspan="6" class="empty">Sem colaboradores críticos para os filtros atuais.</td></tr>';
+
+  const selectedMonth=f.mes ? dashMonthStr(new Date(f.mes+'-01')) : null;
+  const monthLabel=selectedMonth ? new Date(selectedMonth+'-01').toLocaleDateString('pt-BR',{month:'long',year:'numeric'}) : 'Todos os meses';
+  const rangeLabel=(f.ini||f.fim)?` · intervalo: ${fmtRangeLabel(dateInputToDate(f.ini),dateInputToDate(f.fim))}`:'';
+  document.getElementById('dashMatrixNote').textContent=`Filtro: ${monthLabel}${rangeLabel}`;
+  document.getElementById('dashCargoMatrix').innerHTML=dashCargoMatrix(progF,f);
+
+  const dashNames=namesPreview(progF,14);
+  document.getElementById('dashSummary').innerHTML=progF.length
+    ?`${progF.length} programação(ões) no filtro atual${dashNames?` · <b>Nomes:</b> ${dashNames}`:''}`
+    :'Nenhuma programação encontrada para os filtros atuais.';
+
+  renderOverlaps(progF); 
+}
+
+function renderLogPanel(){
+  document.getElementById('alertLog').innerHTML=S.alertLog.length
+    ?S.alertLog.slice(-10).reverse().map(a=>`<div class="stat-mini"><span class="sml">${ucf(a.nome).split(' ').slice(0,2).join(' ')}</span><span style="font-size:10px;color:var(--green)">✓ ${a.ts.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span></div>`).join('')
+    :'<div style="padding:10px 13px;font-size:11.5px;color:var(--text3)">Nenhum alerta nesta sessão.</div>';
+}
+
+// ── RENDER: AVENCER ────────────────────────────────────────────
+function getFAv(){
+  const sr=(document.getElementById('srAv')?.value||'').toLowerCase();
+  let data=S.fav.filter(f=>{
+    const u=urgFn(f);const uk=u==='ferias'?'finalizado':u;
+    if(S.fAv!=='all'&&uk!==S.fAv)return false;
+    if(!contrMatch(f,S.avContracts))return false;
+    if(sr){const h=`${f.nome} ${f.chapa} ${f.lotacao} ${f.status}`.toLowerCase();if(!h.includes(sr))return false;}
+    return true;
+  });
+  const{c,d}=S.sAv;
+  data.sort((a,b)=>{
+    let va=a[c],vb=b[c];
+    if(c==='dias'){va=diasFn(a.dataLimite);vb=diasFn(b.dataLimite);}
+    if(va==null)return 1;if(vb==null)return-1;
+    if(typeof va==='string')va=va.toLowerCase();if(typeof vb==='string')vb=vb.toLowerCase();
+    return d==='asc'?(va>vb?1:va<vb?-1:0):(va<vb?1:va>vb?-1:0);
+  });
+  return data;
+}
+function renderAv(){
+  buildContractBar('cbAv',S.avContracts);
+  const data=getFAv();const tot=data.length;const pg=data.slice(S.pgAv*S.PG,(S.pgAv+1)*S.PG);
+  window._avRows=pg;
+  document.getElementById('cntAv').textContent=`${tot.toLocaleString('pt-BR')} registro(s)`;
+  document.getElementById('tbAv').innerHTML=pg.map((emp,idx)=>{
+    const u=urgFn(emp);const clr=UC[u]?.color||'#aaa';const bg=UC[u]?.bg||'#fff';const d=diasFn(emp.dataLimite);
+    const sb=emp.status==='Ativo'?'green':emp.status==='Férias'?'blue':'gray';
+    const per=emp.periodoAquisitivo?`${fs(emp.periodoAquisitivo)} – ${fs(emp.dataLimite)}`:'—';
+    const lbl=UC[u]?.lbl||u;const gestor=emp._ef?.gestor||'—';
+    const contr=contrFromLot(emp.lotacao);
+    return`<tr class="clk" onclick="APP.openFichaIdx(${idx},'_avRows')">
+      <td style="width:4px;padding:2px 0 2px 7px"><div style="width:3px;height:28px;background:${clr};border-radius:2px"></div></td>
+      <td class="td-m">${emp.chapa}</td>
+      <td style="font-weight:600;min-width:160px">${ucf(emp.nome)}</td>
+      <td><span class="badge ${sb}">${emp.status}</span></td>
+      <td style="font-size:11px;color:var(--text3);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${contr?`<b>${contr}</b> · `:''}<span title="${emp.lotacao}">${emp.lotacao.replace(contr,'').replace(/^[\s\-]+/,'').substring(0,30)}</span></td>
+      <td class="td-m">${per}</td>
+      <td class="td-m" style="color:${clr}">${fs(emp.dataLimite)}</td>
+      <td><span class="badge ${u==='lt60'?'red':u==='critico'?'orange':'gray'}">${emp.saldo}d</span></td>
+      <td><span class="badge" style="background:${bg};color:${clr}">${lbl}${d>=0?` +${d}d`:` ${d}d`}</span>${podeAlertar(emp)?'<span class="badge orange" style="margin-left:3px" title="Programação pendente">⚠ SP</span>':(feriasTotalmenteProgramadas(emp)?'<span class="badge green" style="margin-left:3px" title="Já programado">✓</span>':'')}</td>
+      <td style="font-size:11px;color:var(--text2)">${gestor}</td>
+      <td><button class="tb-btn primary" style="height:26px;font-size:11px;padding:0 9px" onclick="event.stopPropagation();APP.enviarOutlook(window._avRows[${idx}])">✉️</button></td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="11" class="empty">Nenhum registro.</td></tr>';
+  renderPg('Av',tot);
+}
+
+// ── RENDER: PROGRAMAÇÃO ────────────────────────────────────────
+function getFPr(){
+  const sr=(document.getElementById('srPr')?.value||'').toLowerCase();
+  const ini=dateInputToDate(document.getElementById('prIni')?.value||'');
+  const fim=dateInputToDate(document.getElementById('prFim')?.value||'');
+  const range=(ini||fim)?normalizeRange(ini,fim):null;
+  let data=S.prog.filter(l=>{
+    const s=l.situacao.toLowerCase();
+    if(S.fSit==='marcada'&&!s.includes('marcada'))return false;
+    if(S.fSit==='gestor'&&!s.includes('gestor'))return false;
+    if(S.fSit==='paga'&&!s.includes('paga'))return false;
+    if(range && !overlap(l.dtInicio,l.dtFim,range))return false;
+    if(sr){const h=`${l.nome} ${l.matricula} ${l.secao} ${l.cargo}`.toLowerCase();if(!h.includes(sr))return false;}
+    return true;
+  });
+  const{c,d}=S.sPr;
+  data.sort((a,b)=>{let va=a[c],vb=b[c];if(va instanceof Date&&vb instanceof Date)return d==='asc'?va-vb:vb-va;if(va==null)return 1;if(vb==null)return-1;if(typeof va==='string')va=va.toLowerCase();if(typeof vb==='string')vb=vb.toLowerCase();return d==='asc'?(va>vb?1:va<vb?-1:0):(va<vb?1:va>vb?-1:0);});
+  return data;
+}
+function renderPr(){
+  const data=getFPr();const tot=data.length;const pg=data.slice(S.pgPr*S.PG,(S.pgPr+1)*S.PG);
+  window._prRows=pg;
+  document.getElementById('cntPr').textContent=`${tot.toLocaleString('pt-BR')} registro(s)`;
+  const sc=s=>{const sl=s.toLowerCase();return sl.includes('marcada')?'green':sl.includes('gestor')?'orange':sl.includes('paga')?'blue':'gray'};
+  const si=s=>{const sl=s.toLowerCase();return sl.includes('marcada')?'✅':sl.includes('gestor')?'⏳':sl.includes('paga')?'💰':'—'};
+  document.getElementById('tbPr').innerHTML=pg.map((l,idx)=>`
+    <tr class="clk" onclick="APP.openFichaPrIdx(${idx})">
+      <td class="td-m">${l.matricula}</td>
+      <td style="font-weight:600;min-width:160px">${ucf(l.nome)}</td>
+      <td style="font-size:11px;color:var(--text2);max-width:130px;overflow:hidden;text-overflow:ellipsis">${l.cargo}</td>
+      <td style="font-size:11px;color:var(--text3);max-width:160px;overflow:hidden;text-overflow:ellipsis">${l.secao}</td>
+      <td class="td-m">${fs(l.dtInicio)}</td><td class="td-m">${fs(l.dtFim)}</td>
+      <td><span class="badge gray">${l.diasFerias}d</span></td>
+      <td class="td-m">${l.nroDiasAbono||0}</td>
+      <td><span class="badge ${l.paga13==='Sim'?'green':'gray'}">${l.paga13}</span></td>
+      <td><span class="badge ${sc(l.situacao)}">${si(l.situacao)} ${l.situacao.replace(/^[MGP] - /,'')}</span></td>
+      <td class="td-m">${fs(l.dtAviso)}</td>
+    </tr>`).join('')||'<tr><td colspan="11" class="empty">Nenhum registro.</td></tr>';
+  const prNames=namesPreview(data,14);
+  const ini=document.getElementById('prIni')?.value||'';
+  const fim=document.getElementById('prFim')?.value||'';
+  const rangeTxt=(ini||fim)?` · intervalo: ${fmtRangeLabel(dateInputToDate(ini),dateInputToDate(fim))}`:'';
+  document.getElementById('prSummary').innerHTML=tot
+    ?`${tot} programação(ões) no filtro atual${rangeTxt}${prNames?` · <b>Nomes:</b> ${prNames}`:''}`
+    :'Nenhum registro encontrado para os filtros atuais.';
+  renderPg('Pr',tot);
+}
+
+// ── FICHA ──────────────────────────────────────────────────────
+function openFichaIdx(idx,regKey){
+  const reg=window[regKey];if(!reg||!reg[idx])return;
+  S.selEmp=reg[idx];go('colaborador',document.getElementById('nav-colab'));renderFicha(S.selEmp);
+}
+function openFichaPrIdx(idx){
+  const l=window._prRows&&window._prRows[idx];if(!l)return;
+  let emp=S.fav.find(f=>nn(f.nome)===nn(l.nome))||{chapa:l.matricula,nome:l.nome,status:l.codSituacao||'—',lotacao:l.secao,periodoAquisitivo:l.dtInicioPer,dataLimite:l.dtFimPer,saldo:0,_ef:l._ef,_sent:false};
+  S.selEmp=emp;go('colaborador',document.getElementById('nav-colab'));renderFicha(emp);
+}
+function renderFicha(emp){
+  document.getElementById('fichaEmpty').style.display='none';
+  document.getElementById('fichaWrap').style.display='block';
+  const u=urgFn(emp);const d=diasFn(emp.dataLimite);const ef=emp._ef;const clr=UC[u]?.color||'#aaa';
+  const noT='<span style="color:var(--text3);font-style:italic">Sem dados na base TOTVS</span>';
+
+  document.getElementById('fichaHero').innerHTML=`
+    <div class="dh-av" style="background:${clr}22;border-color:${clr}44">${ini(emp.nome)}</div>
+    <div class="dh-info">
+      <div class="dh-name">${ucf(emp.nome)}</div>
+      <div class="dh-sub">Chapa: ${emp.chapa}${ef?` · ID: ${ef.id}`:''}</div>
+      <div class="dh-lot">${emp.lotacao||ef?.localTrabalho||'—'}</div>
+      <div class="dh-badges">
+        <span class="dh-badge ok">${emp.status||'—'}</span>
+        <span class="dh-badge ${u==='lt60'?'red':u==='critico'||u==='atencao'?'orange':u==='ok'?'ok':'gray'}">${UC[u]?.lbl||u}${d>=0?` · +${d}d`:` · ${d}d`}</span>
+        ${feriasTotalmenteProgramadas(emp)?'<span class="dh-badge ok">✓ Férias já programadas</span>':(podeAlertar(emp)?'<span class="dh-badge orange">⚠ Programação pendente</span>':'')}
+        ${ef?.gestor?`<span class="dh-badge blue">👤 ${ef.gestor}</span>`:''}
+      </div>
+    </div>
+    <div class="dh-acts">
+      <button class="tb-btn primary" onclick="APP.alertarSelecionado()">✉️ Outlook</button>
+      <button class="tb-btn" onclick="APP.go('avencer',document.getElementById('nav-avencer'))">📋 Lista</button>
+    </div>`;
+
+  document.getElementById('fichaInfo').innerHTML=`
+    <div class="ic s2 ${u==='finalizado'||u==='lt60'||podeAlertar(emp)?'warn':''}">
+      <div class="ic-lbl" style="${u==='finalizado'||u==='lt60'||podeAlertar(emp)?'color:var(--red)':feriasTotalmenteProgramadas(emp)?'color:#2e7d0e':''}">${feriasTotalmenteProgramadas(emp)?'Saldo de Férias Programado':'Saldo de Férias em Aberto'}${podeAlertar(emp)?' ⚠ SEM PROGRAMAÇÃO':''}</div>
+      <div class="ic-val big ${u==='finalizado'||u==='lt60'?'red':'grn'}">${emp.saldo} dias</div>
+      <div class="ic-hint ${u==='finalizado'||u==='lt60'||podeAlertar(emp)?'red':''}">Data limite: ${fd(emp.dataLimite)} · ${UC[u]?.lbl||u}${feriasTotalmenteProgramadas(emp)?` · ${empProgDays(emp)}d já programados`:''}${podeAlertar(emp)?' · Programação pendente':''}${temFeriasProgramadas(emp)?' · Prog.: '+fd(emp.programadas):''}</div>
+    </div>
+    <div class="ic"><div class="ic-lbl">Período Aquisitivo</div><div class="ic-val mono">${fd(emp.periodoAquisitivo)} – ${fd(emp.dataLimite)}</div></div>
+    <div class="ic"><div class="ic-lbl">Data Admissão</div><div class="ic-val mono">${ef?.admissao?fd(ef.admissao):noT}</div></div>
+    <div class="ic"><div class="ic-lbl">Cargo</div><div class="ic-val" style="font-size:12px">${ef?.cargo||noT}</div></div>
+    <div class="ic"><div class="ic-lbl">Gestor</div><div class="ic-val" style="font-size:12px">${ef?.gestor||noT}</div></div>
+    <div class="ic"><div class="ic-lbl">E-mail</div><div class="ic-val mono" style="font-size:11px">${ef?.email||noT}</div></div>
+    <div class="ic"><div class="ic-lbl">Empresa</div><div class="ic-val" style="font-size:12px">${ef?.empresa||noT}</div></div>
+    <div class="ic"><div class="ic-lbl">Cidade / UF</div><div class="ic-val" style="font-size:12px">${ef?.cidade||noT}${ef?.estado?' / '+ef.estado:''}</div></div>`;
+
+  // Merge LISTAGEM + HISTORICO + FAV timelines
+  const nomeNorm=nn(emp.nome);
+  const progItems=S.prog.filter(l=>nn(l.nome)===nomeNorm).map(l=>({src:'TOTVS',dtInicio:l.dtInicio,dtFim:l.dtFim,dias:l.diasFerias,sit:l.situacao,iniPer:l.dtInicioPer,finPer:l.dtFimPer,paga13:l.paga13,dtAviso:l.dtAviso}));
+  // Synthetic FAV entry: always add the current period from FERIAS A VENCER as context
+  const favEntry=emp.periodoAquisitivo||emp.dataLimite?[{src:'FERIAS A VENCER',dtInicio:emp.programadas&&emp.temProg?emp.programadas:null,dtFim:null,dias:emp.saldo,sit:emp.temProg?'Programada (parcial — '+emp.diasFeriasAv+'d agendados, '+emp.saldo+'d saldo)':'⚠ SEM FÉRIAS PROGRAMADAS — Saldo: '+emp.saldo+'d',iniPer:emp.periodoAquisitivo,finPer:emp.dataLimite,paga13:'—',dtAviso:null}]:[];
+  const histItems=(S.hMap.get(nomeNorm)||[]).map(h=>({src:'Histórico',dtInicio:h.dtIniGozo,dtFim:h.dtFinGozo,dias:h.dias,sit:'Histórico',iniPer:h.iniPerAquis,finPer:h.finPerAquis,paga13:h.salario13==='S'?'Sim':'Não',dtAviso:null}));
+  // Include favEntry only if no progItems match (avoid duplication)
+  const hasProg=progItems.length>0;
+  const all=[...(hasProg?[]:[...favEntry]),...progItems,...histItems].sort((a,b)=>(b.dtInicio||new Date(9999,0))-(a.dtInicio||new Date(9999,0)));
+
+  const src=S.hMap.has(nomeNorm)?'TOTVS + Histórico':'TOTVS';
+  document.getElementById('histSrc').textContent=`Fonte: ${src}`;
+  document.getElementById('fichaTL').innerHTML=all.length?all.slice(0,10).map(l=>{
+    const s=l.sit.toLowerCase();
+    const isFav=l.src==='FERIAS A VENCER';
+    const isSemProg=isFav&&!l.dtInicio;
+    const ic=isSemProg?'⚠':s.includes('paga')?'💰':s.includes('gestor')?'⏳':s.includes('histó')?'📜':'✅';
+    const cls=isSemProg?'r':s.includes('paga')?'b':s.includes('gestor')?'o':s.includes('histó')?'gr':'g';
+    const periodoLabel=`Per. aquisitivo: ${fd(l.iniPer)} – ${fd(l.finPer)}`;
+    const datesLabel=l.dtInicio&&l.dtFim?`${fd(l.dtInicio)} – ${fd(l.dtFim)} · ${l.dias||'?'}d`:l.dtInicio?`Início: ${fd(l.dtInicio)} · ${l.dias||'?'}d restantes`:`Saldo: ${l.dias||'?'} dias`;
+    return`<div class="tl-item"><div class="tl-dot ${cls}">${ic}</div><div>
+      <div class="tl-label" style="${isSemProg?'color:var(--red)':''}">${datesLabel}</div>
+      <div class="tl-meta">${l.sit.replace(/^[MGPFf] - /,'')} · ${periodoLabel}</div>
+      ${!isFav?`<div class="tl-meta">13º: ${l.paga13}${l.dtAviso?' · Aviso: '+fd(l.dtAviso):''}</div>`:''}
+      <span class="tl-src">${l.src}</span>
+    </div></div>`;
+  }).join(''):'<div style="font-size:12px;color:var(--text3)">Nenhum histórico disponível.</div>';
+
+  const logs=S.alertLog.filter(a=>a.chapa===emp.chapa);
+  document.getElementById('fichaLog').innerHTML=logs.length
+    ?logs.reverse().map(a=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)"><span>✉️ Rascunho aberto</span><span style="font-size:11px;color:var(--green)">${a.ts.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span></div>`).join('')
+    :'<div style="font-size:12px;color:var(--text3)">Nenhum alerta nesta sessão.</div>';
+}
+function alertarSelecionado(){if(S.selEmp&&!S.selEmp._synth)enviarOutlook(S.selEmp);}
+
+// ── GLOBAL SEARCH ──────────────────────────────────────────────
+function globalSearch(val){
+  if(!val||val.length<2)return;
+  const v=val.toLowerCase();
+  const f1=S.fav.find(f=>f.nome.toLowerCase().includes(v)||f.chapa===v);
+  if(f1){S.selEmp=f1;go('colaborador',document.getElementById('nav-colab'));renderFicha(f1);return;}
+  const ef2=S.efetivo.find(e=>e.nome.toLowerCase().includes(v));
+  if(ef2){
+    const syn={chapa:ef2.id?String(ef2.id):'—',nome:ef2.nome,status:ef2.situacao||'—',lotacao:ef2.localTrabalho||'—',periodoAquisitivo:null,dataLimite:null,saldo:0,_ef:ef2,_synth:true};
+    S.selEmp=syn;go('colaborador',document.getElementById('nav-colab'));renderFichaSynth(ef2);
+  } else {showToast('Colaborador não encontrado nas bases carregadas.');}
+}
+function renderFichaSynth(ef){
+  document.getElementById('fichaEmpty').style.display='none';
+  document.getElementById('fichaWrap').style.display='block';
+  const noT='<span style="color:var(--text3);font-style:italic">Sem dados na base TOTVS</span>';
+  document.getElementById('fichaHero').innerHTML=`
+    <div class="dh-av" style="background:rgba(87,87,87,.15);border-color:rgba(87,87,87,.3)">${ini(ef.nome)}</div>
+    <div class="dh-info">
+      <div class="dh-name">${ucf(ef.nome)}</div><div class="dh-sub">ID: ${ef.id||'—'} · ${ef.empresa||'—'}</div>
+      <div class="dh-lot">${ef.localTrabalho||'—'}</div>
+      <div class="dh-badges"><span class="dh-badge gray">${ef.situacao||'—'}</span><span class="dh-badge orange">Sem registro em FERIAS/TOTVS</span>${ef.gestor?`<span class="dh-badge blue">👤 ${ef.gestor}</span>`:''}</div>
+    </div>
+    <div class="dh-acts"><button class="tb-btn" onclick="showToast('Sem dados de férias no TOTVS para este colaborador.')">ℹ️ Sem dados FERIAS</button></div>`;
+  document.getElementById('fichaInfo').innerHTML=`
+    <div class="ic s4" style="background:#fff8e6"><div class="ic-lbl" style="color:#8a5c00">⚠ Colaborador não encontrado na planilha FERIAS (TOTVS)</div><div class="ic-val" style="font-size:12px;color:#8a5c00">Verifique diretamente no TOTVS se há período aquisitivo vigente.</div></div>
+    <div class="ic"><div class="ic-lbl">Cargo</div><div class="ic-val" style="font-size:12px">${ef.cargo||noT}</div></div>
+    <div class="ic"><div class="ic-lbl">Admissão</div><div class="ic-val mono">${ef.admissao?fd(ef.admissao):noT}</div></div>
+    <div class="ic"><div class="ic-lbl">Gestor</div><div class="ic-val" style="font-size:12px">${ef.gestor||noT}</div></div>
+    <div class="ic"><div class="ic-lbl">E-mail</div><div class="ic-val mono" style="font-size:11px">${ef.email||noT}</div></div>
+    <div class="ic"><div class="ic-lbl">Empresa</div><div class="ic-val" style="font-size:12px">${ef.empresa||noT}</div></div>
+    <div class="ic"><div class="ic-lbl">Local de Trabalho</div><div class="ic-val" style="font-size:12px">${ef.localTrabalho||noT}</div></div>
+    <div class="ic"><div class="ic-lbl">Cidade / UF</div><div class="ic-val" style="font-size:12px">${ef.cidade||noT}${ef.estado?' / '+ef.estado:''}</div></div>
+    <div class="ic"><div class="ic-lbl">Período Aquisitivo</div><div class="ic-val">${noT}</div></div>
+    <div class="ic"><div class="ic-lbl">Saldo Férias</div><div class="ic-val">${noT}</div></div>`;
+  // Show historico if available
+  const nk=nn(ef.nome);const hi=S.hMap.get(nk)||[];
+  document.getElementById('histSrc').textContent=hi.length?'Fonte: Histórico':'';
+  document.getElementById('fichaTL').innerHTML=hi.length?hi.sort((a,b)=>b.dtIniGozo-a.dtIniGozo).slice(0,8).map(h=>`<div class="tl-item"><div class="tl-dot gr">📜</div><div><div class="tl-label">${fd(h.dtIniGozo)} – ${fd(h.dtFinGozo)} · ${h.dias}d</div><div class="tl-meta">Per: ${fd(h.iniPerAquis)} – ${fd(h.finPerAquis)} · 13º: ${h.salario13}</div><span class="tl-src">Histórico</span></div></div>`).join('')
+    :'<div style="font-size:12px;color:var(--text3)">Nenhum histórico disponível.</div>';
+  document.getElementById('fichaLog').innerHTML='<div style="font-size:12px;color:var(--text3)">Sem alertas — colaborador sem dados em FERIAS.</div>';
+}
+
+// ── GESTORES ──────────────────────────────────────────────────
+function buildGestorMap(){
+  const m={};
+  S.fav.forEach(emp=>{const g=emp._ef?.gestor||'';if(!g)return;const k=g.toUpperCase().split(' ').slice(0,2).join(' ');if(!m[k])m[k]={nome:g,email:gestorEmail(g),emps:[]};m[k].emps.push(emp);});
+  return m;
+}
+function renderGestores(){
+  const gmap=buildGestorMap();
+  document.getElementById('gestoresList').innerHTML=Object.entries(gmap).sort((a,b)=>a[0].localeCompare(b[0])).map(([k,g])=>{
+    const crit=g.emps.filter(e=>podeAlertar(e)&&['ferias','finalizado','lt60','critico'].includes(urgFn(e))).length;
+    return`<div class="g-row">
+      <div class="g-av">${k.substring(0,2)}</div>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:700">${ucf(g.nome)}</div>
+        <div style="font-size:10.5px;color:var(--text3)">${g.email||'E-mail não cadastrado'} · ${g.emps.length} colaborador(es)</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        ${crit>0?`<span class="badge red">${crit} urgentes</span>`:'<span class="badge green">OK</span>'}
+        <button class="tb-btn primary" style="height:27px;font-size:11px" onclick="APP.emailGestor('${k}')">✉️ Outlook</button>
+      </div>
+    </div>`;
+  }).join('')||'<div class="empty">Nenhum colaborador com gestor identificado. Carregue o Efetivo.</div>';
+}
+
+// Build structured email for gestor (table format)
+function buildGestorEmail(g){
+  const emps=g.emps.filter(podeAlertar).sort((a,b)=>diasFn(a.dataLimite)-diasFn(b.dataLimite));
+  const fin=emps.filter(e=>{const d=diasFn(e.dataLimite);const u=urgFn(e);return u==='ferias'||u==='finalizado';});
+  const t15=emps.filter(e=>{const d=diasFn(e.dataLimite);return d>=0&&d<=15;});
+  const t30=emps.filter(e=>{const d=diasFn(e.dataLimite);return d>15&&d<=30;});
+  const t45=emps.filter(e=>{const d=diasFn(e.dataLimite);return d>30&&d<=45;});
+
+  const rowPT=(emp,showStatus)=>`  ${ucf(emp.nome).padEnd(30,' ')} | Chapa: ${emp.chapa.padEnd(6,' ')} | ${emp.saldo}d | Limite: ${fd(emp.dataLimite)}${showStatus?' | '+emp.status:''}${!temFeriasProgramadas(emp)&&emp.saldo>0?' | ⚠ SEM PROG.':''}`;
+  const tblSection=(title,list,showStatus=false)=>list.length?`\n${title}\n${'─'.repeat(70)}\n${list.map(e=>rowPT(e,showStatus)).join('\n')}\n`:'';
+
+  const body=`Prezado(a) ${ucf(g.nome)},\n\nSegue a situação de férias dos colaboradores sob sua gestão (ordenado por urgência):\n${tblSection('FINALIZADAS / EM FÉRIAS:',fin,true)}${tblSection('⚠ VENCE EM ATÉ 15 DIAS:',t15)}${tblSection('! VENCE EM ATÉ 30 DIAS:',t30)}${tblSection('  VENCE EM ATÉ 45 DIAS:',t45)}\nColaboradores com mais de 45 dias não são listados neste relatório.\n\nAtenciosamente,\nDepartamento Pessoal — Concremat Ind&Miner`;
+  return{to:g.email,cc:'',subject:`Concremat DP — Situação de Férias — Equipe: ${ucf(g.nome)}`,body,nome:ucf(g.nome),buckets:{fin,t15,t30,t45}};
+}
+function buildGestorEmailHTML(item){
+  const{buckets,nome}=item;
+  const renderSection=(title,cssClass,list)=>{
+    if(!list||!list.length)return'';
+    return`<div class="em-section"><div class="em-sec-title ${cssClass}">${title} (${list.length})</div><table class="em-tbl"><thead><tr><th>Colaborador</th><th>Chapa</th><th>Saldo</th><th>Data Limite</th><th>Status</th><th>Programação</th></tr></thead><tbody>${list.map(e=>`<tr><td><b>${ucf(e.nome)}</b></td><td class="td-m">${e.chapa}</td><td class="td-m">${e.saldo}d</td><td class="td-m" style="color:${UC[urgFn(e)]?.color||'#555'}">${fd(e.dataLimite)}</td><td><span class="badge ${e.status==='Férias'?'blue':'gray'}">${e.status}</span></td><td style="font-size:10px">${e.temProg?'✅ '+fd(e.programadas):'<span style=\'color:var(--red);font-weight:700\'>⚠ Sem prog.</span>'}</td></tr>`).join('')}</tbody></table></div>`;
+  };
+  return renderSection('⬜ Finalizadas / Em Férias','fin',buckets.fin)+
+    renderSection('🔴 Vence em até 15 dias','t15',buckets.t15)+
+    renderSection('🟠 Vence em até 30 dias','t30',buckets.t30)+
+    renderSection('🟡 Vence em até 45 dias','t45',buckets.t45)+
+    '<div style="padding:8px 16px 4px;font-size:11px;color:var(--text3)">Colaboradores com mais de 45 dias não são listados neste relatório.</div>';
+}
+
+function emailGestor(key){
+  const gmap=buildGestorMap();const g=gmap[key];if(!g)return;
+  const item=buildGestorEmail(g);
+  const total=item.buckets.fin.length+item.buckets.t15.length+item.buckets.t30.length+item.buckets.t45.length;
+  if(!total){showToast('Nenhum colaborador elegível para alerta nesta equipe.');return;}
+  abrirEmailModal([item],'📨 E-mail para Gestor: '+item.nome,true);
+}
+function alertarTodosGestores(){
+  const gmap=buildGestorMap();
+  const items=Object.values(gmap).map(g=>buildGestorEmail(g)).filter(i=>i.buckets.fin.length+i.buckets.t15.length+i.buckets.t30.length+i.buckets.t45.length>0);
+  if(!items.length){showToast('Nenhum gestor com colaboradores elegíveis (≤45 dias).');return;}
+  abrirEmailModal(items,'📨 Alertar Todos os Gestores',true);
+}
+
+// ── OUTLOOK / EMAIL MODAL ─────────────────────────────────────
+function enviarOutlook(emp){
+  if(!emp)return;
+  if(!podeAlertar(emp)){showToast('Este colaborador já possui férias programadas para o saldo atual.');return;}
+  const u=urgFn(emp);const d=diasFn(emp.dataLimite);
+  const ef=emp._ef;const gEmail=ef?.gestor?gestorEmail(ef.gestor):'';const to=ef?.email||'';
+  const urgLabel=u==='finalizado'?'Finalizada':u==='ferias'?'Em Férias (gozo ativo)':u==='lt60'?`Vence em ${d} dias`:`${UC[u]?.lbl||u}: +${d} dias`;
+  const semProgTxt=(!temFeriasProgramadas(emp)&&emp.saldo>0)?'\\n\\n⚠ ATENÇÃO: Este colaborador NÃO possui férias programadas. O saldo de '+emp.saldo+' dia(s) precisa ser agendado antes do prazo ('+fd(emp.dataLimite)+').':'';
+  const subject=`${u==='finalizado'||u==='lt60'?'[URGENTE] ':u==='critico'?'[CRÍTICO] ':'[AVISO] '}Férias — ${ucf(emp.nome)} — Chapa ${emp.chapa}`;
+  const body=`Olá ${ucf(emp.nome).split(' ')[0]},\\n\\nSuas férias referentes ao período ${fd(emp.periodoAquisitivo)} a ${fd(emp.dataLimite)} têm situação: ${urgLabel}.\\n\\nSaldo pendente: ${emp.saldo} dia(s).${semProgTxt}\\n\\nPor favor, entre em contato com seu gestor para regularização.\\n\\nAtenciosamente,\\nDepartamento Pessoal — Concremat Ind&Miner`;
+  abrirEmailModal([{to,cc:gEmail,subject,body,nome:ucf(emp.nome),chapa:emp.chapa}],'✉️ Alertar: '+ucf(emp.nome).split(' ')[0],false);
+  S.alertLog.push({nome:emp.nome,chapa:emp.chapa,ts:new Date(),email:to});emp._sent=true;
+  renderLogPanel();
+}
+function alertarSelecionado(){if(S.selEmp&&!S.selEmp._synth)enviarOutlook(S.selEmp);}
+
+function abrirMassa(){
+  const fin=document.getElementById('tog-fin')?.classList.contains('on');
+  const lt60=document.getElementById('tog-lt60')?.classList.contains('on');
+  const crit=document.getElementById('tog-crit')?.classList.contains('on');
+  const aten=document.getElementById('tog-aten')?.classList.contains('on');
+  const lemb=document.getElementById('tog-lemb')?.classList.contains('on');
+  const emps=S.fav.filter(f=>podeAlertar(f)&&((fin&&(urgFn(f)==='finalizado'||urgFn(f)==='ferias'))||(lt60&&urgFn(f)==='lt60')||(crit&&urgFn(f)==='critico')||(aten&&urgFn(f)==='atencao')||(lemb&&urgFn(f)==='lembrete'))).sort((a,b)=>diasFn(a.dataLimite)-diasFn(b.dataLimite));
+  if(!emps.length){showToast('Nenhum colaborador elegível nas faixas ativadas em Configurações.');return;}
+  const items=emps.map(emp=>{
+    const u=urgFn(emp);const d=diasFn(emp.dataLimite);const ef=emp._ef;const gEmail=ef?.gestor?gestorEmail(ef.gestor):'';const to=ef?.email||'';
+    const subject=`${u==='finalizado'||u==='lt60'?'[URGENTE] ':'[AVISO] '}Férias — ${ucf(emp.nome)} — Chapa ${emp.chapa}`;
+    const body=`Olá ${ucf(emp.nome).split(' ')[0]},\\n\\nSuas férias ${u==='finalizado'?'venceram':'vencem'} em ${fd(emp.dataLimite)} (${UC[u]?.lbl||u}${d>=0?` · +${d}d`:` · ${d}d`}).\\nSaldo: ${emp.saldo} dia(s).\\n\\nEntre em contato com seu gestor imediatamente.\\n\\nAtt, Depto. Pessoal — Concremat`;
+    return{to,cc:gEmail,subject,body,nome:ucf(emp.nome),chapa:emp.chapa};
+  });
+  abrirEmailModal(items,`✉️ Alertas em Massa (${items.length})`,false);
+}
+
+function abrirEmailModal(items,titulo,isGestor){
+  window._olItems=items;
+  document.getElementById('mTitle').textContent=titulo;
+  let html=`<div class="ol-warn">💡 Clique em <b>Abrir no Outlook</b> para criar o rascunho. Se não funcionar, use <b>Copiar</b> para montar o e-mail manualmente.</div>`;
+  items.forEach((it,i)=>{
+    const html_tables=isGestor?buildGestorEmailHTML(it):'';
+    html+=`<div class="ol-block">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-weight:700;font-size:13px">${it.nome||'Item '+(i+1)}${it.chapa?` · Chapa ${it.chapa}`:''}</div>
+        <div style="display:flex;gap:5px">
+          <button class="tb-btn blue" style="height:26px;font-size:11px" onclick="APP.tryOutlookIdx(${i})">📬 Abrir no Outlook</button>
+          <button class="tb-btn" style="height:26px;font-size:11px" onclick="APP.copyAll(${i})">📋 Copiar</button>
+        </div>
+      </div>
+      <div class="ol-fl">Para</div><div class="ol-fv">${it.to||'(sem e-mail — preencha manualmente)'}</div>
+      ${it.cc?`<div class="ol-fl" style="margin-top:5px">CC (Gestor)</div><div class="ol-fv">${it.cc}</div>`:''}
+      <div class="ol-fl" style="margin-top:5px">Assunto</div><div class="ol-fv">${it.subject}</div>
+      ${isGestor?`<div class="ol-fl" style="margin-top:5px">Prévia estruturada</div>${html_tables}`:`<div class="ol-fl" style="margin-top:5px">Corpo</div><div class="ol-fv body-field" id="ol-body-${i}">${it.body}</div>`}
+    </div>`;
+  });
+  document.getElementById('mBody').innerHTML=html;
+  document.getElementById('mFoot').innerHTML=`<span style="font-size:11px;color:var(--text3);flex:1">${items.length} rascunho(s) nesta ação</span><button class="tb-btn" onclick="closeModal()">Fechar</button>`;
+  document.getElementById('overlay').style.display='flex';
+}
+
+function tryOutlookIdx(i){
+  const it=window._olItems&&window._olItems[i];if(!it){showToast('Erro: item não encontrado.');return;}
+  const url='mailto:'+encodeURIComponent(it.to||'')+(it.cc?'?cc='+encodeURIComponent(it.cc)+'&':'?')+'subject='+encodeURIComponent(it.subject||'')+'&body='+encodeURIComponent(it.body||'');
+  try{const a=document.createElement('a');a.href=url;a.rel='noopener';document.body.appendChild(a);a.click();document.body.removeChild(a);showToast('📬 Rascunho aberto no Outlook');}
+  catch(e){showToast('⚠️ Use Copiar para montar o e-mail manualmente.');}
+}
+function copyAll(i){
+  const it=window._olItems&&window._olItems[i];if(!it)return;
+  const txt=`PARA: ${it.to||''}\nCC: ${it.cc||''}\nASSUNTO: ${it.subject||''}\n\n${it.body||''}`;
+  const copy=t=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);};
+  (navigator.clipboard?.writeText(txt)||Promise.reject()).then(()=>showToast('📋 Copiado!')).catch(()=>{copy(txt);showToast('📋 Copiado!');});
+}
+
+// ── EXPORT ────────────────────────────────────────────────────
+function exportCSV(tipo){
+  let rows,hdr,fn;
+  if(tipo==='prog'){rows=getFPr().map(l=>[l.matricula,l.nome,l.cargo,l.secao,fd(l.dtInicio),fd(l.dtFim),l.diasFerias,l.nroDiasAbono,l.paga13,l.situacao,fd(l.dtAviso)]);hdr=['Matrícula','Nome','Cargo','Seção','DT Início','DT Fim','Dias','Abono','13º','Situação','DT Aviso'];fn='programacao_ferias.csv';}
+  else{rows=getFAv().map(f=>[f.chapa,f.nome,f.status,f.lotacao,contrFromLot(f.lotacao),fd(f.periodoAquisitivo),fd(f.dataLimite),f.saldo,f._ef?.gestor||'',f._ef?.email||'',UC[urgFn(f)]?.lbl||urgFn(f)]);hdr=['Chapa','Nome','Status','Lotação','Contrato','Período Aquisitivo','Data Limite','Saldo','Gestor','E-mail','Faixa'];fn='ferias_a_vencer.csv';}
+  const csv=[hdr,...rows].map(r=>r.map(c=>`"${(c||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=fn;a.click();URL.revokeObjectURL(url);
+  showToast('📤 CSV exportado!');
+}
+
+// ── PAGINATION ────────────────────────────────────────────────
+function renderPg(k,tot){
+  const pages=Math.ceil(tot/S.PG);const cur=S[`pg${k}`];
+  let h='';for(let i=0;i<Math.min(pages,12);i++)h+=`<button class="pg-btn${i===cur?' active':''}" onclick="APP.setPg('${k}',${i})">${i+1}</button>`;
+  if(pages>12)h+=`<span style="font-size:11px;padding:0 4px;color:var(--text3)">…${pages}</span>`;
+  document.getElementById(`pgs${k}`).innerHTML=h;
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────
+function go(page,el){
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  if(el)el.classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+page)?.classList.add('active');
+  const T={dashboard:['Dashboard',`Atualizado ${new Date().toLocaleDateString('pt-BR')}`],avencer:['Férias a Vencer',`${S.fav.length.toLocaleString('pt-BR')} colaboradores`],programacao:['Programação de Férias',`${S.prog.length.toLocaleString('pt-BR')} registros`],colaborador:['Ficha do Colaborador',S.selEmp?ucf(S.selEmp.nome):'Selecione um colaborador'],gestores:['Alertar Gestores','E-mails estruturados por equipe via Outlook'],alertas:['Configurações de Lembretes','Faixas para ações em massa · Outlook sem envio automático']};
+  const[t,s]=T[page]||['—',''];
+  document.getElementById('tb-t').textContent=t;document.getElementById('tb-s').textContent=s;
+  if(page==='dashboard')renderDash();
+  if(page==='avencer'){S.pgAv=0;renderAv();}
+  if(page==='programacao'){S.pgPr=0;renderPr();}
+  if(page==='gestores')renderGestores();
+}
+function goFilter(f){S.fAv=f;document.querySelectorAll('#frAv .chip').forEach(c=>c.classList.toggle('active',c.dataset.f===f));go('avencer',document.getElementById('nav-avencer'));}
+const setFAv=(f,el)=>{S.fAv=f;S.pgAv=0;document.querySelectorAll('#frAv .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderAv();};
+const setFSit=(f,el)=>{S.fSit=f;S.pgPr=0;el.closest('.fr').querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderPr();};
+const sortAv=c=>{S.sAv.d=S.sAv.c===c&&S.sAv.d==='asc'?'desc':'asc';S.sAv.c=c;S.pgAv=0;renderAv();};
+const sortPr=c=>{S.sPr.d=S.sPr.c===c&&S.sPr.d==='asc'?'desc':'asc';S.sPr.c=c;S.pgPr=0;renderPr();};
+const setPg=(k,p)=>{S[`pg${k}`]=p;if(k==='Av')renderAv();else renderPr();};
+
+// ── FILE LOADING ──────────────────────────────────────────────
+let _fWb=null,_eWb=null,_hWb=null;
+function loadFile(wb,lbId,zoneId){
+  const shts=Object.keys(wb.Sheets);
+  
+  // Verifica se possui as abas da nova planilha unificada
+  if(shts.includes('FERIAS') || shts.includes('A VENCER')){
+    _fWb=wb;
+    document.getElementById(lbId||'lbF').textContent='✅ Férias detectado (Abas lidas)';
+    document.getElementById(zoneId||'zF').classList.add('loaded');
+    document.getElementById('btnStart').disabled=false;
+  }
+  else if(shts.includes('Efetivo')){_eWb=wb;document.getElementById(lbId||'lbE').textContent='✅ Efetivo detectado';document.getElementById(zoneId||'zE').classList.add('loaded');}
+  else if(shts.includes('Sheet1')){_hWb=wb;document.getElementById(lbId||'lbH').textContent='✅ Histórico detectado';document.getElementById(zoneId||'zH').classList.add('loaded');}
+}
+function attachInput(inputId,lbId,zoneId){
+  document.getElementById(inputId).addEventListener('change',function(e){
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();r.onload=ev=>loadFile(XLSX.read(ev.target.result,{type:'array',cellDates:true}),lbId,zoneId);r.readAsArrayBuffer(f);
+  });
+}
+attachInput('inFerias','lbF','zF');
+attachInput('inEfetivo','lbE','zE');
+attachInput('inHist','lbH','zH');
+document.getElementById('inAll').addEventListener('change',function(e){
+  Array.from(e.target.files).forEach(f=>{const r=new FileReader();r.onload=ev=>loadFile(XLSX.read(ev.target.result,{type:'array',cellDates:true}),null,null);r.readAsArrayBuffer(f);});
+});
+
+function iniciar(){
+  if(!_fWb)return;
+  try{
+    parseFer(_fWb);if(_eWb)parseEf(_eWb);if(_hWb)parseHist(_hWb);
+    joinEf();
+    
+    // --- OTIMIZAÇÃO: PRÉ-CÁLCULO DE FÉRIAS FUTURAS POR NOME ---
+    S.futureDaysByName.clear();
+    S.prog.forEach(p => {
+      p._nn = nn(p.nome); // Guarda o nome limpo em cache
+      if (p.dtInicio && p.dtInicio >= S.today) {
+        const dias = parseInt(p.diasFerias, 10) || 0;
+        S.futureDaysByName.set(p._nn, (S.futureDaysByName.get(p._nn) || 0) + dias);
+      }
+    });
+    // ----------------------------------------------------------
+
+    document.getElementById('uploadScreen').style.display='none';
+    document.getElementById('app').classList.add('visible');
+    go('dashboard',document.getElementById('nav-dashboard'));
+    showToast(`✅ ${S.fav.length.toLocaleString('pt-BR')} colaboradores · ${S.prog.length.toLocaleString('pt-BR')} programações${S.hist.length?` · ${S.hist.length} históricos`:''}`);
+  }catch(err){alert('Erro ao processar planilha: '+err.message);console.error(err);}
+}
+
+return{go,goFilter,setFAv,setFSit,sortAv,sortPr,setPg,
+  openFichaIdx,openFichaPrIdx,alertarSelecionado,abrirMassa,enviarOutlook,
+  toggleCargoRow,
+  abrirEmailModal,tryOutlookIdx,copyAll,exportCSV,emailGestor,alertarTodosGestores,
+  globalSearch,toggleContract,toggleChart,toggleGanttView,setDashFilter,clearDashFilters,iniciar};
+})();
+
+function showToast(msg,dur=2400){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._tm);t._tm=setTimeout(()=>t.classList.remove('show'),dur);}
+function closeModal(){document.getElementById('overlay').style.display='none';}
+</script>
+</body>
+</html>

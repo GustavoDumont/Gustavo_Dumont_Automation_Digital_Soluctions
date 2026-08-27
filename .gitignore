@@ -1,0 +1,17 @@
+# Dados e relatórios operacionais
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+*.ods
+
+# Arquivos gerados
+*.zip
+salvamento*
+relatorio*
+
+# Temporários
+~$*
+*.tmp
+.DS_Store
+Thumbs.db
