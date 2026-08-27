@@ -88,7 +88,7 @@ Planilha Excel
 Geração e faturamento
 ```
 
-Mais detalhes em [`docs/architecture.md`](docs/architecture.md).
+Mais detalhes em [`architecture.md`](architecture.md).
 
 ## Estrutura da branch
 
