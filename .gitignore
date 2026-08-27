@@ -1,0 +1,26 @@
+# Dados financeiros e exportações
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+*.ods
+*.pdf
+
+# Pacotes e definições corporativas
+*.msapp
+*.zip
+*.json
+*.xml
+
+# Dados locais
+ME2N*
+CONTAS_A_PAGAR*
+contas_a_pagar*
+export*
+relatorio*
+
+# Temporários
+~$*
+*.tmp
+.DS_Store
+Thumbs.db
