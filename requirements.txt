@@ -1,0 +1,7 @@
+customtkinter>=5.2,<6
+selenium>=4.20,<5
+openpyxl>=3.1,<4
+pandas>=2.2,<3
+PyMuPDF>=1.24,<2
+Pillow>=10,<12
+pytesseract>=0.3.13,<1
