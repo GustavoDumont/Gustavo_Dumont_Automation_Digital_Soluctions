@@ -1,0 +1,28 @@
+# Dados e documentos reais
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+*.pdf
+*.docx
+*.zip
+*.exe
+*.msapp
+
+# Segredos e configurações
+.env
+.env.*
+!.env.example
+config.json
+credentials*
+secrets*
+
+# Temporários
+__pycache__/
+*.py[cod]
+.venv*/
+build/
+dist/
+*.log
+.DS_Store
+Thumbs.db
