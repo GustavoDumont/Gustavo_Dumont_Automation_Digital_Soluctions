@@ -12,9 +12,7 @@ Não se trata apenas de uma coleção de scripts. O repositório registra a evol
 
 > Transformo tarefas repetitivas e processos fragmentados em soluções digitais simples, rastreáveis e reutilizáveis.
 
-> Desenvolvo automações, aplicações internas e ferramentas de análise para reduzir esforço manual, organizar informações e aumentar a segurança dos processos. Os projetos incluem integração com sistemas corporativos, processamento documental, OCR, dashboards e operações em grande escala.
-
-> Os projetos apresentados automatizam pesquisas, downloads, organização de arquivos, extração de dados, alertas, controles e relatórios. O resultado é mais produtividade, menos omissões e maior capacidade de atuação sobre exceções.
+> Desenvolvo automações, aplicações internas e ferramentas de análise para reduzir esforço manual, organizar informações e aumentar a segurança dos processos. Os projetos incluem integração com sistemas corporativos, processamento documental, OCR, dashboards e operações em grande escala. O resultado é mais produtividade, menos omissões e maior capacidade de atuação sobre exceções.
 
 ## Destaques da trajetória
 
